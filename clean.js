@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import he from "he";
 import { mkdirp } from "mkdirp";
 import { glob } from "glob";
+import { default as cliProgress } from "cli-progress";
 
 // Constants
 const path = "articles/1-cleaned";
@@ -32,6 +33,9 @@ function cleanContent(content) {
     content = content.trim();
     // Remove all double spaces
     content = content.replace(/  /g, ' ');
+    // Normalize paragraph breaks
+    content = content.replace(/\n\n+/g, '\n\n');
+    content = content.replace(/\r\n/g, '\n\n');
     // No more than 2 newlines in a row
     content = content.replace(/\n{3,}/g, '\n\n');
     return content;
@@ -58,26 +62,29 @@ function clean_article_map(article) {
 async function main() {
     await mkdirp(path);
     const article_files = await glob(`${previous_path}/*.json`);
-    console.log(`Found ${article_files.length} articles.`);
-
     let max_word_count = 0;
     let tot_word_count = 0;
     let i = 0;
-    // Write cleaned articles to a file
+    const bar1 = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+    bar1.start(article_files.length, 0);
     for (let article_file of article_files) {
-        const article = clean_article_map(JSON.parse(await fs.readFile(article_file, "utf8")));
-        if (article.word_count > max_word_count) {
-            max_word_count = article.word_count;
+        try {
+            const article = clean_article_map(JSON.parse(await fs.readFile(article_file, "utf8")));
+            if (article.word_count > max_word_count) {
+                max_word_count = article.word_count;
+            }
+            tot_word_count += article.word_count;
+            i++;
+            await fs.writeFile(`${path}/${article._id}.json`, JSON.stringify(article, null, 2));
+        } catch (error) {
+            console.error(`Error processing ${article_file}: ${error}`);
         }
-        tot_word_count += article.word_count;
-        i++;
-        await fs.writeFile(`${path}/${article._id}.json`, JSON.stringify(article, null, 2));
+        bar1.increment();
     }
+    bar1.stop();
     console.log(`Max word count: ${max_word_count}; Total word count: ${tot_word_count}; Average word count: ${tot_word_count / i}`);
-    return "done.";
 
 }
 
 main()
-    .then(console.log)
     .catch(console.error)

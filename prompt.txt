@@ -1,0 +1,19 @@
+Extract the named entities from the following article. Return people with their titles and genders, places, and organisations. The response must be in JSON format. Return only the JSON. Exclude publishers involved in creating the article.§
+
+Example:
+```json
+{
+  "people": [{"name": "", "title": "", "organisation": "", "gender": "Male|Female|Unknown"}],
+  "places": [""],
+  "organisations": [""]
+}
+```
+
+---
+
+${article.title}
+
+${article.excerpt}
+
+${article.content}
+<--ends-->

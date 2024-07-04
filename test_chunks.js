@@ -1,12 +1,3 @@
-import fs from "fs/promises";
-import { mkdirp } from "mkdirp";
-import { glob } from "glob";
-
-// Constants
-const path = "articles/2-chunked";
-const previous_path = "articles/1-cleaned";
-const max_chunk_size = 1000;
-
 function chunkText(content, max_words) {
     function wordCount(text) {
         return text.split(/\s+/).filter(word => word.length > 0).length;
@@ -66,37 +57,12 @@ function chunkText(content, max_words) {
     return chunks;
 }
 
-function chunk(article) {
-    const header = `URL: ${article.url}\nTitle: ${article.title}\npost_id: ${article.post_id}\n_id: ${article._id}\n\n<!--starts-->\n\n`;
-    const footer = `<!--ends-->\n\n`;
-    const body = `${article.excerpt}\n\n${article.content}`;
-    // console.log(header);
-    if (body.length < max_chunk_size) {
-        return [{
-            content: header + body + footer,
-        }];
-    }
-    const chunks = chunkText(body, max_chunk_size);
-    // console.log(chunks);
-    // throw new Error("Not implemented");
-    return chunks.map(chunk => ({
-        content: header + chunk + footer,
-    }));
-}
+// Example usage:
+const content = `First paragraph with some short text.
+Second paragraph is also short.
+This paragraph however, is a bit longer and might need to be split into multiple chunks depending on the provided max_words argument. This is especially true if max_words is too low. 
+Here is another short paragraph for testing.`
 
-async function main() {
-    await mkdirp(path);
-    const article_files = await glob(`${previous_path}/*.json`);
-    console.log(`Found ${article_files.length} articles.`);
-    for (let article_file of article_files) {
-        const article = JSON.parse(await fs.readFile(article_file, "utf8"));
-        article.chunks = chunk(article);
-        await fs.writeFile(`${path}/${article._id}.json`, JSON.stringify(article, null, 2));
-    }
-    return "done.";
-
-}
-
-main()
-    .then(console.log)
-    .catch(console.error)
+const max_words = 20;
+const result = chunkText(content, max_words);
+console.log(result);
