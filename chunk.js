@@ -1,6 +1,8 @@
 import fs from "fs/promises";
 import { mkdirp } from "mkdirp";
 import { glob } from "glob";
+import { default as cliProgress } from "cli-progress";
+import { existsSync } from "fs";
 
 // Constants
 const path = "articles/2-chunked";
@@ -70,33 +72,34 @@ function chunk(article) {
     const header = `URL: ${article.url}\nTitle: ${article.title}\npost_id: ${article.post_id}\n_id: ${article._id}\n\n<!--starts-->\n\n`;
     const footer = `<!--ends-->\n\n`;
     const body = `${article.excerpt}\n\n${article.content}`;
-    // console.log(header);
     if (body.length < max_chunk_size) {
         return [{
             content: header + body + footer,
         }];
     }
     const chunks = chunkText(body, max_chunk_size);
-    // console.log(chunks);
-    // throw new Error("Not implemented");
     return chunks.map(chunk => ({
         content: header + chunk + footer,
     }));
 }
 
-async function main() {
+export async function Chunk() {
     await mkdirp(path);
     const article_files = await glob(`${previous_path}/*.json`);
-    console.log(`Found ${article_files.length} articles.`);
+    const bar1 = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+    bar1.start(article_files.length, 0);
     for (let article_file of article_files) {
         const article = JSON.parse(await fs.readFile(article_file, "utf8"));
+        if (existsSync(`${path}/${article._id}.json`)) {
+            bar1.increment();
+            continue;
+        }
         article.chunks = chunk(article);
         await fs.writeFile(`${path}/${article._id}.json`, JSON.stringify(article, null, 2));
+        bar1.increment();
     }
-    return "done.";
-
+    bar1.stop();
 }
 
-main()
-    .then(console.log)
-    .catch(console.error)
+// Chunk()
+//     .catch(console.error)

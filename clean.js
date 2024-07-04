@@ -3,6 +3,7 @@ import he from "he";
 import { mkdirp } from "mkdirp";
 import { glob } from "glob";
 import { default as cliProgress } from "cli-progress";
+import { existsSync } from "fs";
 
 // Constants
 const path = "articles/1-cleaned";
@@ -42,24 +43,26 @@ function cleanContent(content) {
 }
 
 function clean_article_map(article) {
-    const content = cleanContent(article.content);
+    const content = cleanContent(article.content || "");
+    const excerpt = cleanContent(article.excerpt || "");
+    const title = cleanContent(article.title || "");
     return {
         _id: article._id.toString(),
         post_id: article.post_id,
-        tags: article.tags,
-        sections: article.sections,
+        tags: article.tags || [],
+        sections: article.sections || [],
         url: `https://www.dailymaverick.co.za/article/${article.date_published.substring(0, 10)}-${article.urlid}/`,
-        author: article.author,
+        author: article.author || "",
         date_published: article.date_published,
         date_modified: article.date_modified,
-        title: cleanContent(article.title),
-        excerpt: cleanContent(article.excerpt),
+        title,
+        excerpt,
         content,
-        word_count: content.split(/\s+/).length
+        word_count: (`${title}\n${excerpt}\n${content}`).split(/\s+/).length
     }
 }
 
-async function main() {
+export async function Clean() {
     await mkdirp(path);
     const article_files = await glob(`${previous_path}/*.json`);
     let max_word_count = 0;
@@ -70,6 +73,10 @@ async function main() {
     for (let article_file of article_files) {
         try {
             const article = clean_article_map(JSON.parse(await fs.readFile(article_file, "utf8")));
+            if (existsSync(`${path}/${article._id}.json`)) {
+                bar1.increment();
+                continue;
+            }
             if (article.word_count > max_word_count) {
                 max_word_count = article.word_count;
             }
@@ -83,8 +90,7 @@ async function main() {
     }
     bar1.stop();
     console.log(`Max word count: ${max_word_count}; Total word count: ${tot_word_count}; Average word count: ${tot_word_count / i}`);
-
 }
 
-main()
-    .catch(console.error)
+// Clean()
+//     .catch(console.error)
