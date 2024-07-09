@@ -1,24 +1,13 @@
-import { MongoClient } from "mongodb";
 import { Qdrant } from "./qdrant.js";
 import ollama from "ollama";
 import { v5 as uuidv5 } from 'uuid';
 
 const qdrant = new Qdrant();
-const url = "mongodb://localhost:27017";
-const client = new MongoClient(url);
 
-const DBNAME = "dm";
-const DBCOLLECTION = "articles";
 const COLLECTION = "article_embeddings";
 const MODEL = "all-minilm:latest"
 
-let collection;
-
-export async function init() {
-    await client.connect();
-    const db = client.db(DBNAME);
-    collection = db.collection(DBCOLLECTION);
-}
+export async function init() { }
 
 export async function qdrant_search(content, limit, filter = {}) {
     const embeddings = await ollama.embeddings({ prompt: content, model: MODEL });
@@ -66,15 +55,9 @@ export async function search(content, { limit = 5, previous_days = 30, section =
     return result;
 }
 
-export async function similar(post_id, { limit = 5, previous_days = 30 }) {
+export async function similar(_id, { limit = 5, previous_days = 30 }) {
     if (limit > 10) {
         limit = 10;
-    }
-    post_id = post_id * 1;
-    const article = await collection.findOne({ post_id });
-    if (!article) {
-        console.log(`Article not found: ${post_id}`);
-        return [];
     }
     const start_date = new Date();
     start_date.setDate(start_date.getDate() - previous_days);
@@ -90,12 +73,10 @@ export async function similar(post_id, { limit = 5, previous_days = 30 }) {
             }
         });
     }
-    const id = uuidv5(`${article._id}_0`, uuidv5.URL);
+    const id = uuidv5(`${_id}_0`, uuidv5.URL);
     const result = await qdrant.similarById(COLLECTION, id, limit, filter);
     // console.log(result.map(r => r.score));
     return result;
 }
 
-export async function close() {
-    await client.close();
-}
+export async function close() { }

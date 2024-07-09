@@ -49,8 +49,8 @@ describe("Similarity", function () {
         await close();
     });
 
-    it("should find similar articles based on post_id", async function () {
-        const post_id = 2248596; // AirFryday: Cheesy chilli con carne, the air fryer edition
+    it("should find similar articles based on _id", async function () {
+        const post_id = "5f17feace6eba93d8137f9bd"; // AirFryday: Cheesy chilli con carne, the air fryer edition
         const result = await similar(post_id, { limit: 5, previous_days: -1 });
         expect(result).toBeDefined();
         expect(result.length).toEqual(5);

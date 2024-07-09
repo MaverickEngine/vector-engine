@@ -7,10 +7,11 @@ describe("API", function () {
     afterAll(async function () {
         await close();
     });
-    it("should return similar articles", async function () {
+
+    it("should return similar articles based on _id", async function () {
         const response = await app.inject({
             method: "GET",
-            url: "/similar/2248596",
+            url: "/similar/5f17feace6eba93d8137f9bd",
         });
         expect(response.statusCode).toEqual(200);
         const result = response.json();

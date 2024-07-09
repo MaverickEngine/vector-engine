@@ -8,4 +8,5 @@ module.exports = {
     '^.+\\.js$': 'babel-jest',
   },
   transformIgnorePatterns: [],
+  testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/dist/', '<rootDir>/env/', '<rootDir>/.venv/', '<rootDir>/article/'],
 };
