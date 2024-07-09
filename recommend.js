@@ -31,6 +31,9 @@ export async function qdrant_search(content, limit, filter = {}) {
 }
 
 export async function search(content, { limit = 5, previous_days = 30, section = "all", tag = "all" }) {
+    if (limit > 10) {
+        limit = 10;
+    }
     const start_date = new Date();
     start_date.setDate(start_date.getDate() - previous_days);
     const filter = { "must": [] }
@@ -64,8 +67,13 @@ export async function search(content, { limit = 5, previous_days = 30, section =
 }
 
 export async function similar(post_id, { limit = 5, previous_days = 30 }) {
+    if (limit > 10) {
+        limit = 10;
+    }
+    post_id = post_id * 1;
     const article = await collection.findOne({ post_id });
     if (!article) {
+        console.log(`Article not found: ${post_id}`);
         return [];
     }
     const start_date = new Date();
