@@ -12,8 +12,13 @@ const DBCOLLECTION = "articles";
 const COLLECTION = "article_embeddings";
 const MODEL = "all-minilm:latest"
 
-const db = client.db(DBNAME);
-const collection = db.collection(DBCOLLECTION);
+let collection;
+
+export async function init() {
+    await client.connect();
+    const db = client.db(DBNAME);
+    collection = db.collection(DBCOLLECTION);
+}
 
 export async function qdrant_search(content, limit, filter = {}) {
     const embeddings = await ollama.embeddings({ prompt: content, model: MODEL });
@@ -79,6 +84,10 @@ export async function similar(post_id, { limit = 5, previous_days = 30 }) {
     }
     const id = uuidv5(`${article._id}_0`, uuidv5.URL);
     const result = await qdrant.similarById(COLLECTION, id, limit, filter);
-
+    // console.log(result.map(r => r.score));
     return result;
+}
+
+export async function close() {
+    await client.close();
 }

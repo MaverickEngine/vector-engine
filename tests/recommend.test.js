@@ -1,6 +1,14 @@
-import { search, similar } from "../recommend.js";
+import { search, similar, init, close } from "../recommend.js";
 
 describe("Search", function () {
+    beforeAll(async function () {
+        await init();
+    });
+
+    afterAll(async function () {
+        await close();
+    });
+
     it("should search for articles based on what I'm asking", async function () {
         const content = "What should I cook for dinner?";
         const limit = 5;
@@ -33,17 +41,26 @@ describe("Search", function () {
 });
 
 describe("Similarity", function () {
+    beforeAll(async function () {
+        await init();
+    });
+
+    afterAll(async function () {
+        await close();
+    });
+
     it("should find similar articles based on post_id", async function () {
         const post_id = 2248596; // AirFryday: Cheesy chilli con carne, the air fryer edition
-        const limit = 5;
-        const result = await similar(post_id, limit);
+        const result = await similar(post_id, { limit: 5, previous_days: -1 });
         expect(result).toBeDefined();
         expect(result.length).toEqual(5);
         const post_ids = result.map(item => item.payload.post_id);
         expect(post_ids).not.toContain(post_id);
         const scores = result.map(item => item.score);
         // Expect scores to decrease in size
-        expect(scores[0]).toBeLessThan(scores[1]);
-        expect(scores[1]).toBeLessThan(scores[2]);
+        expect(scores[0]).toBeGreaterThan(scores[1]);
+        expect(scores[1]).toBeGreaterThan(scores[2]);
+        expect(scores[2]).toBeGreaterThan(scores[3]);
+        expect(scores[3]).toBeGreaterThan(scores[4]);
     });
 });
