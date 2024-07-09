@@ -90,7 +90,7 @@ export class Qdrant {
 
     async search(collection, query) {
         const search = {
-            filter: query.filters,
+            filter: query.filter || {},
             "params": {
                 "hnsw_ef": 128,
                 "exact": false
@@ -107,19 +107,23 @@ export class Qdrant {
             body: JSON.stringify(search)
         });
         const result = await response.json();
-        return result.result;
+        if (result.status !== "ok") {
+            console.log(result)
+            throw new Error(result.statusText || "Unknown error");
+        }
+        return result.result.sort((a, b) => b.score - a.score);
     }
 
-    async deleteRecord(collection, id) {
+    async deleteRecord(collection, post_id) {
         const response = await fetch(`${this.url}/collections/${collection}/points/delete`, {
             method: 'POST',
             body: JSON.stringify({
                 "filter": {
                     "must": [
                         {
-                            "key": "file_uid",
+                            "key": "post_id",
                             "match": {
-                                "value": id
+                                "value": post_id
                             }
                         }
                     ]
@@ -133,5 +137,57 @@ export class Qdrant {
         const response = await fetch(`${this.url}/collections/${collection}`);
         const info = (await response.json()).result;
         return info;
+    }
+
+    async getById(collection, id) {
+        const response = await fetch(`${this.url}/collections/${collection}/points/${id}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        const result = await response.json();
+        if (result.status !== "ok") {
+            console.log(result)
+            throw new Error(result.statusText || "Unknown error");
+        }
+        if (!result.result) {
+            return null;
+        }
+        return result.result;
+    }
+
+    async similarById(collection, id, limit, filter = {}) {
+        const point = await this.getById(collection, id);
+        if (!point) {
+            return [];
+        }
+        filter.must_not = [{
+            "has_id": [id]
+        }]
+        const search = {
+            vector: point.vector,
+            "params": {
+                "hnsw_ef": 128,
+                "exact": false
+            },
+            limit,
+            "with_payload": true,
+            filter,
+            "group_by": "post_id",
+            "group_size": 1,
+        }
+        const response = await fetch(`${this.url}/collections/${collection}/points/search`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(search)
+        });
+        const result = await response.json();
+        if (result.status !== "ok") {
+            throw new Error(result.statusText || "Unknown error");
+        }
+        return result.result.sort((a, b) => b.score - a.score);
     }
 }
