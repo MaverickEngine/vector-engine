@@ -3,16 +3,19 @@ import fs from "fs/promises";
 import { mkdirp } from "mkdirp";
 import { default as cliProgress } from "cli-progress";
 import { existsSync } from "fs";
+import { config } from "dotenv";
+config();
 
 // Constants
-const url = "mongodb://localhost:27017";
+const url = process.env.MONGO_URI || "mongodb://localhost:27017";
 const client = new MongoClient(url);
 const path = "articles/0-extracted";
 const batch_size = 1000;
 const max_batch_count = -1;
 const dbName = "dm";
-const fields = ["_id", "post_id", "tags", "sections", "url", "author", "date_published", "date_modified", "title", "excerpt", "content", "urlid"];
-const search = { type: "article", urlid: { $exists: true, $ne: null }, excerpt: { $exists: true, $ne: "", $type: "string" } }
+const fields = ["_id", "post_id", "tags", "sections", "url", "author", "date_published", "date_modified", "title", "excerpt", "content", "urlid", "custom_section_label", "img_thumbnail", "type"];
+const search = { $or: [{ type: "article" }, { type: "opinion-piece" }], urlid: { $exists: true, $ne: null }, excerpt: { $exists: true, $ne: "", $type: "string" } };
+
 async function save_articles(articles) {
     await mkdirp(path);
     try {
@@ -32,6 +35,7 @@ export async function Extract() {
     const collection = db.collection("articles");
 
     const count = await collection.countDocuments(search);
+    console.log(`Found ${count} articles`);
     const batch_count = max_batch_count > 0 ? max_batch_count : Math.ceil(count / batch_size);
     const bar1 = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
     bar1.start(batch_count, 0);
@@ -46,6 +50,14 @@ export async function Extract() {
         bar1.increment();
     }
     bar1.stop();
+}
+
+export async function extract_article(_id) {
+    await client.connect();
+    const db = client.db(dbName);
+    const collection = db.collection("articles");
+    const article = await collection.findOne({ _id });
+    await save_articles([article]);
 }
 
 // Extract()

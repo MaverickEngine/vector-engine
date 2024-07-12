@@ -1,4 +1,5 @@
 import { fastify } from "fastify";
+import { fastifyCors } from "@fastify/cors";
 import { init as recommend_init, similar, close as recommend_close } from "./recommend.js";
 import { get, set } from "./cache.js";
 import JXPHelper from "jxp-helper";
@@ -10,6 +11,11 @@ const JXP_API_KEY = process.env.JXP_API_KEY || "1234";
 const jxp = new JXPHelper({ server: JXP_SERVER, apikey: JXP_API_KEY });
 
 export const app = fastify();
+
+app.register(fastifyCors, {
+    origin: true,
+    credentials: true,
+});
 
 const port = process.env.PORT || 8001;
 const host = process.env.HOST || "0.0.0.0";

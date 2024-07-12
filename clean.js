@@ -62,34 +62,33 @@ function clean_article_map(article) {
     }
 }
 
+export async function clean_article(_id) {
+    const article_file = `${previous_path}/${_id}.json`;
+    const previous_article = JSON.parse(await fs.readFile(article_file, "utf8"));
+    const article = clean_article_map(previous_article);
+    await fs.writeFile(`${path}/${_id}.json`, JSON.stringify(article, null, 2));
+}
+
 export async function Clean() {
     await mkdirp(path);
     const article_files = await glob(`${previous_path}/*.json`);
-    let max_word_count = 0;
-    let tot_word_count = 0;
-    let i = 0;
     const bar1 = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
     bar1.start(article_files.length, 0);
     for (let article_file of article_files) {
+        const _id = article_file.split("/").pop().split(".")[0];
+        if (existsSync(`${path}/${_id}.json`)) {
+            bar1.increment();
+            continue;
+        }
         try {
-            const article = clean_article_map(JSON.parse(await fs.readFile(article_file, "utf8")));
-            if (existsSync(`${path}/${article._id}.json`)) {
-                bar1.increment();
-                continue;
-            }
-            if (article.word_count > max_word_count) {
-                max_word_count = article.word_count;
-            }
-            tot_word_count += article.word_count;
-            i++;
-            await fs.writeFile(`${path}/${article._id}.json`, JSON.stringify(article, null, 2));
+            await clean_article(_id);
         } catch (error) {
             console.error(`Error processing ${article_file}: ${error}`);
+            // break;
         }
         bar1.increment();
     }
     bar1.stop();
-    console.log(`Max word count: ${max_word_count}; Total word count: ${tot_word_count}; Average word count: ${tot_word_count / i}`);
 }
 
 // Clean()

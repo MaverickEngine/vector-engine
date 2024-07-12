@@ -36,14 +36,17 @@ export async function Embeddings() {
     bar1.start(article_files.length, 0);
     let i = 0;
     for (let article_file of article_files) {
-        const article = JSON.parse(await fs.readFile(article_file, "utf8"));
-        if (existsSync(`${path}/${article._id}.json`)) {
+        i++;
+        const _id = article_file.split("/").pop().split(".")[0];
+        if (existsSync(`${path}/${_id}.json`)) {
             bar1.increment();
             continue;
         }
-        article.chunks = await embedding(article);
-        await fs.writeFile(`${path}/${article._id}.json`, JSON.stringify(article, null, 2));
-        i++;
+        try {
+            await embed_article(_id);
+        } catch (error) {
+            console.error(`Error processing ${article_file}: ${error}`);
+        }
         bar1.increment();
     }
     bar1.stop();
@@ -51,6 +54,13 @@ export async function Embeddings() {
     console.log(`Time elapsed: ${(time_end - time_start) / 1000}s`);
     console.log(`Average time per article: ${(time_end - time_start) / i / 1000}s`);
     return true;
+}
+
+export async function embed_article(_id) {
+    const article_file = `${previous_path}/${_id}.json`;
+    const article = JSON.parse(await fs.readFile(article_file, "utf8"));
+    article.chunks = await embedding(article);
+    await fs.writeFile(`${path}/${_id}.json`, JSON.stringify(article, null, 2));
 }
 
 // Embeddings()

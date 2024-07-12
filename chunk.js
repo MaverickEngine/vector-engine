@@ -69,7 +69,7 @@ function chunkText(content, max_words) {
 }
 
 function chunk(article) {
-    const header = `URL: ${article.url}\nTitle: ${article.title}\npost_id: ${article.post_id}\n_id: ${article._id}\n\n<!--starts-->\n\n`;
+    const header = `URL: ${article.url}\nTitle: ${article.title}\npost_id: ${article.post_id}\nDate: ${article.date_published}\n\n<!--starts-->\n\n`;
     const footer = `<!--ends-->\n\n`;
     const body = `${article.excerpt}\n\n${article.content}`;
     if (body.length < max_chunk_size) {
@@ -89,16 +89,27 @@ export async function Chunk() {
     const bar1 = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
     bar1.start(article_files.length, 0);
     for (let article_file of article_files) {
-        const article = JSON.parse(await fs.readFile(article_file, "utf8"));
-        if (existsSync(`${path}/${article._id}.json`)) {
+        const _id = article_file.split("/").pop().split(".")[0];
+        if (existsSync(`${path}/${_id}.json`)) {
             bar1.increment();
             continue;
         }
-        article.chunks = chunk(article);
-        await fs.writeFile(`${path}/${article._id}.json`, JSON.stringify(article, null, 2));
+        try {
+            await chunk_article(_id);
+        } catch (error) {
+            console.error(`Error processing ${article_file}: ${error}`);
+        }
         bar1.increment();
     }
     bar1.stop();
+}
+
+export async function chunk_article(_id) {
+    const article_file = `${previous_path}/${_id}.json`;
+    const article = JSON.parse(await fs.readFile(article_file, "utf8"));
+    article.chunks = chunk(article);
+    await fs.writeFile(`${path}/${_id}.json`, JSON.stringify(article, null, 2));
+    return article;
 }
 
 // Chunk()
