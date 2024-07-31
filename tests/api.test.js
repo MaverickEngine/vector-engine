@@ -27,4 +27,32 @@ describe("API", function () {
         expect(item.sections).toBeDefined();
         expect(item.excerpt).toBeDefined();
     });
+
+    it("should vectorize an article from a Wordpress post id", async function () {
+        const response = await app.inject({
+            method: "POST",
+            url: "/vectorize",
+            payload: {
+                post_id: 674669,
+            }
+        });
+        expect(response.statusCode).toEqual(200);
+        const result = response.json();
+        expect(result).toBeDefined();
+        console.log(result);
+    })
+
+    it("should vectorize an article from a RevEngine id", async function () {
+        const response = await app.inject({
+            method: "POST",
+            url: "/vectorize",
+            payload: {
+                revengine_id: "669fa28fda704571f8b9b66d",
+            }
+        });
+        expect(response.statusCode).toEqual(200);
+        const result = response.json();
+        expect(result).toBeDefined();
+        console.log(result);
+    })
 });

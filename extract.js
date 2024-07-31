@@ -16,16 +16,20 @@ const dbName = "dm";
 const fields = ["_id", "post_id", "tags", "sections", "url", "author", "date_published", "date_modified", "title", "excerpt", "content", "urlid", "custom_section_label", "img_thumbnail", "type"];
 const search = { $or: [{ type: "article" }, { type: "opinion-piece" }], urlid: { $exists: true, $ne: null }, excerpt: { $exists: true, $ne: "", $type: "string" } };
 
-async function save_articles(articles) {
+async function extract_articles(articles) {
     await mkdirp(path);
     try {
         for (let article of articles) {
-            if (existsSync(`${path}/${article._id}.json`)) continue;
-            await fs.writeFile(`${path}/${article._id}.json`, JSON.stringify(article, null, 2));
+
         }
     } catch (error) {
         console.error(error);
     }
+}
+
+export async function extract_article(article, force = false) {
+    if (!force || existsSync(`${path}/${article._id}.json`)) return;
+    await fs.writeFile(`${path}/${article._id}.json`, JSON.stringify(article, null, 2));
 }
 
 export async function Extract() {
@@ -46,19 +50,19 @@ export async function Extract() {
             field_obj[field] = 1;
         }
         const batch_articles = await collection.find(search).project(field_obj).skip(batch_start).limit(batch_size).toArray();
-        await save_articles(batch_articles);
+        await extract_articles(batch_articles);
         bar1.increment();
     }
     bar1.stop();
 }
 
-export async function extract_article(_id) {
-    await client.connect();
-    const db = client.db(dbName);
-    const collection = db.collection("articles");
-    const article = await collection.findOne({ _id });
-    await save_articles([article]);
-}
+// export async function extract_article(_id) {
+//     await client.connect();
+//     const db = client.db(dbName);
+//     const collection = db.collection("articles");
+//     const article = await collection.findOne({ _id });
+//     await extract_articles([article]);
+// }
 
 // Extract()
 //     .catch(console.error)

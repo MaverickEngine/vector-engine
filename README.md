@@ -95,9 +95,17 @@ The body of the request should be a JSON object with the following properties:
 
 The endpoint will return the 5 most similar articles to the provided search query.
 
-### POST /vectorize/:id
+### POST /vectorize
 
 ID can be either a Wordpress post ID or a RevEngine article ID. The endpoint will vectorize the article with the provided ID.
+
+Body:
+```json
+{
+    "post_id": 1234, # Either a Wordpress post ID
+    "revengine_id": 5678 # Or a RevEngine article ID
+}
+```
 
 ## Caching
 

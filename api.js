@@ -4,6 +4,7 @@ import { init as recommend_init, similar, close as recommend_close } from "./rec
 import { get, set } from "./cache.js";
 import JXPHelper from "jxp-helper";
 import { config } from "dotenv";
+import { vectorize_one } from "./vectorize_one.js";
 config();
 
 const JXP_SERVER = process.env.JXP_SERVER || "http://localhost:8080";
@@ -22,15 +23,23 @@ const host = process.env.HOST || "0.0.0.0";
 
 const KEY_PREFIX = "qdrant-cache";
 
-async function find_article_by_post_id(post_id) {
+async function find_article_by_post_id(post_id, fields = ["_id"]) {
     const article = (await jxp.get("article", {
         "filter[post_id]": post_id,
-        "fields": "_id",
+        fields: fields.join(","),
     })).data;
     if (article.length === 0) {
         return null;
     }
     return article[0];
+}
+
+async function find_article_by_revengine_id(revengine_id, fields = ["_id"]) {
+    const article = (await jxp.getOne("article", revengine_id, { fields: fields.join(",") })).data;
+    if (!article) {
+        return null;
+    }
+    return article;
 }
 
 app.get("/similar/:id", async (req, res) => {
@@ -71,6 +80,35 @@ app.get("/similar/:id", async (req, res) => {
     res.send(result);
     await set(key, result);
 });
+
+app.post("/vectorize", async (req, res) => {
+    const { post_id, revengine_id } = req.body;
+    if (!post_id && !revengine_id) {
+        res.status(400).send("post_id or revengine_id is required");
+    }
+    if (post_id && revengine_id) {
+        res.status(400).send("post_id and revengine_id are mutually exclusive");
+    }
+    let article;
+    const fields = ["_id", "post_id", "tags", "sections", "url", "author", "date_published", "date_modified", "title", "excerpt", "content", "urlid", "custom_section_label", "img_thumbnail", "type"];
+    if (post_id) {
+        article = await find_article_by_post_id(post_id, fields);
+        if (!article) {
+            res.status(404).send("Article not found");
+            return;
+        }
+    }
+    if (revengine_id) {
+        article = await find_article_by_revengine_id(revengine_id, fields);
+        if (!article) {
+            res.status(404).send("Article not found");
+            return;
+        }
+    }
+    const result = await vectorize_one(article);
+    res.send(result);
+});
+
 
 export async function init() {
     await recommend_init();

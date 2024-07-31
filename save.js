@@ -39,11 +39,12 @@ export async function save_article(_id) {
     const article = JSON.parse(await fs.readFile(`${previous_path}/${_id}.json`, "utf8"));
     const chunks = article.chunks;
     let j = 0;
+    let result = [];
     for (let chunk of chunks) {
         if (!chunk.embedding) {
             throw (`Missing embedding for ${article._id}`);
         }
-        const id = uuidv5(`${article._id}_${j}`, uuidv5.URL);
+        const id = uuidv5(`${article._id}_${j++}`, uuidv5.URL);
         const data = {
             id,
             vectors: chunk.embedding,
@@ -62,11 +63,17 @@ export async function save_article(_id) {
                 type: article.type,
             }
         }
+        console.log(data);
         const response = await qdrant.addRecords(collectionName, [data]);
         if (!response) {
             throw (`Error upserting ${article._id}`);
         }
+        result.push({
+            id,
+            response
+        });
     }
+    return result;
 }
 
 // Save()

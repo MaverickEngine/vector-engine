@@ -56,7 +56,8 @@ export async function Embeddings() {
     return true;
 }
 
-export async function embed_article(_id) {
+export async function embed_article(_id, force = false) {
+    if (!force || existsSync(`${path}/${_id}.json`)) return;
     const article_file = `${previous_path}/${_id}.json`;
     const article = JSON.parse(await fs.readFile(article_file, "utf8"));
     article.chunks = await embedding(article);
