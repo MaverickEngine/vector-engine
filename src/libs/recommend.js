@@ -79,4 +79,6 @@ export async function similar(_id, { limit = 5, previous_days = 30 }) {
     return result;
 }
 
-export async function close() { }
+export async function close() {
+    // qdrant.close();
+}

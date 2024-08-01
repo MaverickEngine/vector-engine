@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import { glob } from "glob";
-import { Qdrant } from "./qdrant.js";
+import { Qdrant } from "../libs/qdrant.js";
 import { v5 as uuidv5 } from 'uuid';
 import { default as cliProgress } from "cli-progress";
 
@@ -63,7 +63,7 @@ export async function save_article(_id) {
                 type: article.type,
             }
         }
-        console.log(data);
+        // console.log(data);
         const response = await qdrant.addRecords(collectionName, [data]);
         if (!response) {
             throw (`Error upserting ${article._id}`);

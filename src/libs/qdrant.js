@@ -65,7 +65,6 @@ export class Qdrant {
                 data
             })
         });
-        console.log(response)
         return await response.json();
     }
 

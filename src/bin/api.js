@@ -1,10 +1,10 @@
 import { fastify } from "fastify";
 import { fastifyCors } from "@fastify/cors";
-import { init as recommend_init, similar, close as recommend_close } from "./recommend.js";
-import { get, set } from "./cache.js";
+import { init as recommend_init, similar, close as recommend_close } from "../libs/recommend.js";
+import { get, set } from "../libs/cache.js";
 import JXPHelper from "jxp-helper";
 import { config } from "dotenv";
-import { vectorize_one } from "./vectorize_one.js";
+import { vectorize_one } from "../libs/vectorize_one.js";
 config();
 
 const JXP_SERVER = process.env.JXP_SERVER || "http://localhost:8080";

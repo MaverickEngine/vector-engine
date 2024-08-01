@@ -1,4 +1,4 @@
-import { search, similar, init, close } from "../recommend.js";
+import { search, similar, init, close } from "../src/libs/recommend.js";
 
 describe("Search", function () {
     beforeAll(async function () {
@@ -12,7 +12,7 @@ describe("Search", function () {
     it("should search for articles based on what I'm asking", async function () {
         const content = "What should I cook for dinner?";
         const limit = 5;
-        const result = await search(content, limit);
+        const result = await search(content, { limit, previous_days: 365 });
         expect(result).toBeDefined();
         expect(result.length).toEqual(5);
         const item = result[0];
@@ -31,7 +31,7 @@ describe("Search", function () {
         const content = "What should I cook for dinner?";
         const limit = 5;
         const section = "Africa";
-        const result = await search(content, { limit, section });
+        const result = await search(content, { limit, section, previous_days: 365 });
         expect(result).toBeDefined();
         expect(result.length).toEqual(5);
         const item = result[0];

@@ -1,4 +1,4 @@
-import { app, close, init } from "../api.js";
+import { app, close, init } from "../src/bin/api.js";
 
 describe("API", function () {
     beforeAll(async function () {
@@ -39,7 +39,7 @@ describe("API", function () {
         expect(response.statusCode).toEqual(200);
         const result = response.json();
         expect(result).toBeDefined();
-        console.log(result);
+        // console.log(result);
     })
 
     it("should vectorize an article from a RevEngine id", async function () {
@@ -53,6 +53,6 @@ describe("API", function () {
         expect(response.statusCode).toEqual(200);
         const result = response.json();
         expect(result).toBeDefined();
-        console.log(result);
+        // console.log(result);
     })
 });
