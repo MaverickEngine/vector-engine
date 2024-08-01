@@ -35,7 +35,8 @@
     "typescript": "^5.4.3"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "start": "node src/bin/api.js"
   },
   "author": "Jason Norwood-Young <jason@10layer.com>",
   "license": "MIT",
