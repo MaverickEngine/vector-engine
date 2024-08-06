@@ -20,7 +20,7 @@ async function extract_articles(articles) {
     await mkdirp(path);
     try {
         for (let article of articles) {
-
+            await extract_article(article, true);
         }
     } catch (error) {
         console.error(error);
