@@ -63,10 +63,16 @@ docker-compose up -d
 To bulk vectorize all the articles, run the following command:
 
 ```bash
-node src/bin/vectorize.js
+node src/bin/vectorize.js -a
 ```
 
 The process should take a few hours to complete. It creates a folder called "articles" which contains the articles in each step of the process. If you want to rerun the process from the last point, do not delete this folder and the command will skip most of the work. If you want to start over, delete the folder and rerun the command.
+
+You can run just one step of the process at a time. Run the following to get all the options:
+
+```bash
+node src/bin/vectorize.js -h
+```
 
 ## API
 
