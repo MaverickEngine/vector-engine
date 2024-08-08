@@ -2,7 +2,13 @@ import fs from "fs/promises";
 import { readFileSync } from "fs";
 import { mkdirp } from "mkdirp";
 import { glob } from "glob";
-import ollama from "ollama";
+import { Ollama } from "ollama";
+import { config } from "dotenv";
+config();
+
+const ollama = new Ollama({
+    host: process.env.OLLAMA_URL || "http://localhost:11434",
+});
 
 // Constants
 const path = "articles/2-entities";

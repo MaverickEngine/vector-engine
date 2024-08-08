@@ -15,6 +15,7 @@ services:
       - QDRANT_HOST=qdrant
       - QDRANT_URL=http://qdrant:6333
       - REDIS_HOST=redis
+      - OLLAMA_URL=http://ollama:11434
     volumes:
       - ./articles:/app/articles
       - ./src:/app/src
@@ -34,5 +35,20 @@ services:
     deploy:
       mode: global
 
+  ollama:
+    # image: ollama/ollama:latest
+    build:
+      context: ./ollama
+      dockerfile: Dockerfile
+    # ports:
+    #   - 8000:8000
+    deploy:
+      mode: global
+    volumes:
+      - ./models:/.ollama/models
+    # command: 
+    #   - /bin/ollama pull all-minilm
+    #   - ollama serve
+      
 volumes:
   qdrant_data:

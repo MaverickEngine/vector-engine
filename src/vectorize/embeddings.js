@@ -1,9 +1,15 @@
 import fs from "fs/promises";
 import { mkdirp } from "mkdirp";
 import { glob } from "glob";
-import ollama from "ollama";
+import { Ollama } from "ollama";
 import { default as cliProgress } from "cli-progress";
 import { existsSync } from "fs";
+import { config } from "dotenv";
+config();
+
+const ollama = new Ollama({
+    host: process.env.OLLAMA_URL || "http://localhost:11434",
+});
 
 // Constants
 const path = "articles/3-embeddings";

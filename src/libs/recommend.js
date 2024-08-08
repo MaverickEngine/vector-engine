@@ -1,6 +1,12 @@
 import { Qdrant } from "./qdrant.js";
-import ollama from "ollama";
+import { Ollama } from "ollama";
 import { v5 as uuidv5 } from 'uuid';
+import { config } from "dotenv";
+config();
+
+const ollama = new Ollama({
+    host: process.env.OLLAMA_URL || "http://localhost:11434",
+});
 
 const qdrant = new Qdrant();
 

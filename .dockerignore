@@ -3,3 +3,4 @@ articles
 env
 .venv
 .env
+models
