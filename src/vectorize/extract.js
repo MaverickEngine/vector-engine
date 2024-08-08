@@ -12,7 +12,7 @@ const client = new MongoClient(url);
 const path = "articles/0-extracted";
 const batch_size = 1000;
 const max_batch_count = -1;
-const dbName = "dm";
+const dbName = process.env.MONGO_DB_NAME || "dm";
 const fields = ["_id", "post_id", "tags", "sections", "url", "author", "date_published", "date_modified", "title", "excerpt", "content", "urlid", "custom_section_label", "img_thumbnail", "type"];
 const search = { $or: [{ type: "article" }, { type: "opinion-piece" }], urlid: { $exists: true, $ne: null }, excerpt: { $exists: true, $ne: "", $type: "string" } };
 
