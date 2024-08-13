@@ -42,11 +42,14 @@ The article vectorization process is as follows:
 4. Add the following variables to the `.env` file:
 - `JXP_SERVER` - The URL of the JXP server
 - `JXP_API_KEY` - The API key for the JXP server
+- `MONGO_URI` - The URI of the MongoDB server, defaults to `mongodb://localhost:27017`
+- `MONGO_DB_NAME` - The name of the MongoDB database, defaults to `dm`
 - `REDIS_HOST` - The host of the Redis server, defaults to `localhost`
 - `REDIS_PORT` - The port of the Redis server, defaults to `6379`
 - `REDIS_PASSWORD` - The password for the Redis server, defaults to no password
 - `HOST` - The host of the server, defaults to `127.0.0.1`
 - `PORT` - The port of the server, defaults to `8001`
+
 5. Start the server with `npm start`
 
 ## Docker
