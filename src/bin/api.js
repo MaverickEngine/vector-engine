@@ -62,8 +62,9 @@ app.get("/similar/:id", async (req, res) => {
         }
     }
     const limit = req.query.limit || 5;
+    const previous_days = req.query.previous_days || 30;
     console.log(`Similar articles for ${_id}`);
-    const articles = await similar(_id, { limit }).catch(err => {
+    const articles = await similar(_id, { limit, previous_days }).catch(err => {
         console.error(err);
         res.status(500).send(err);
     });
