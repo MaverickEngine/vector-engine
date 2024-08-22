@@ -43,7 +43,9 @@ async function find_article_by_revengine_id(revengine_id, fields = ["_id"]) {
 }
 
 app.get("/similar/:id", async (req, res) => {
-    const key = `${KEY_PREFIX}-similar-${req.params.id}`;
+    const limit = req.query.limit || 5;
+    const previous_days = req.query.previous_days || 30;
+    const key = `${KEY_PREFIX}-similar-${req.params.id}-${limit}-${previous_days}`;
     const cached = await get(key);
     if (cached) {
         console.log(`Similar articles for ${req.params.id} from cache`);
@@ -61,8 +63,6 @@ app.get("/similar/:id", async (req, res) => {
             return;
         }
     }
-    const limit = req.query.limit || 5;
-    const previous_days = req.query.previous_days || 30;
     console.log(`Similar articles for ${_id}`);
     const articles = await similar(_id, { limit, previous_days }).catch(err => {
         console.error(err);
