@@ -64,7 +64,7 @@ function clean_article_map(article) {
 
 export async function clean_article(_id, force = false) {
     const article_file = `${previous_path}/${_id}.json`;
-    if (!force || existsSync(`${path}/${_id}.json`)) return;
+    if (!force && existsSync(`${path}/${_id}.json`)) return;
     const previous_article = JSON.parse(await fs.readFile(article_file, "utf8"));
     const article = clean_article_map(previous_article);
     await fs.writeFile(`${path}/${_id}.json`, JSON.stringify(article, null, 2));

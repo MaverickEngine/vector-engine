@@ -105,7 +105,7 @@ export async function Chunk() {
 }
 
 export async function chunk_article(_id, force = false) {
-    if (!force || existsSync(`${path}/${_id}.json`)) return;
+    if (!force && existsSync(`${path}/${_id}.json`)) return;
     const article_file = `${previous_path}/${_id}.json`;
     const article = JSON.parse(await fs.readFile(article_file, "utf8"));
     article.chunks = chunk(article);
