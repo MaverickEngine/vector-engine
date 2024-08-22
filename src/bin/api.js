@@ -47,6 +47,7 @@ app.get("/similar/:id", async (req, res) => {
     const previous_days = req.query.previous_days || 30;
     const key = `${KEY_PREFIX}-similar-${req.params.id}-${limit}-${previous_days}`;
     const cached = await get(key);
+    // let cached = false;
     if (cached) {
         console.log(`Similar articles for ${req.params.id} from cache`);
         res.send(cached);
@@ -68,6 +69,23 @@ app.get("/similar/:id", async (req, res) => {
         console.error(err);
         res.status(500).send(err);
     });
+    const article_post_ids = articles.map(article => article.payload.post_id);
+    const query = [
+        {
+            "$match": {
+                post_id: {
+                    $in: article_post_ids
+                }
+            }
+        },
+        {
+            "$project": {
+                post_id: 1,
+                img_thumbnail: 1
+            }
+        }
+    ]
+    const thumbnails = (await jxp.aggregate("article", query)).data;
     const result = articles.map(article => ({
         score: article.score,
         post_id: article.payload.post_id,
@@ -76,7 +94,8 @@ app.get("/similar/:id", async (req, res) => {
         author: article.payload.author,
         date_published: article.payload.date_published,
         sections: article.payload.sections,
-        excerpt: article.payload.excerpt
+        excerpt: article.payload.excerpt,
+        thumbnail: thumbnails.find(thumbnail => thumbnail.post_id === article.payload.post_id)?.img_thumbnail
     }));
     res.send(result);
     await set(key, result);
