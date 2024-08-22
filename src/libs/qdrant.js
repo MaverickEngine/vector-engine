@@ -161,9 +161,11 @@ export class Qdrant {
         if (!point) {
             return [];
         }
-        filter.must_not = [{
-            "has_id": [id]
-        }]
+        filter.must_not = [
+            {
+                "key": "post_id", "match": { "value": point.payload.post_id }
+            }
+        ]
         const search = {
             vector: point.vector,
             "params": {
