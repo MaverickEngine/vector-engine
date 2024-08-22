@@ -37,7 +37,7 @@
   },
   "scripts": {
     "test": "jest",
-    "start": "node src/bin/api.js"
+    "start": "node --watch src/bin/api.js"
   },
   "author": "Jason Norwood-Young <jason@10layer.com>",
   "license": "MIT",
