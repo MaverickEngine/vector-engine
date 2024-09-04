@@ -1,6 +1,8 @@
 node_modules
 articles
+articles.old
 env
 .venv
 .env
 models
+mongodb_dump
