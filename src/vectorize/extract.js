@@ -4,6 +4,7 @@ import { mkdirp } from "mkdirp";
 import { default as cliProgress } from "cli-progress";
 import { existsSync } from "fs";
 import { config } from "dotenv";
+import moment from "moment-timezone";
 config();
 
 // Constants
@@ -13,8 +14,8 @@ const path = "articles/0-extracted";
 const batch_size = 1000;
 const max_batch_count = -1;
 const dbName = process.env.MONGO_DB_NAME || "dm";
-const fields = ["_id", "post_id", "tags", "sections", "url", "author", "date_published", "date_modified", "title", "excerpt", "content", "urlid", "custom_section_label", "img_thumbnail", "type"];
-const search = { $or: [{ type: "article" }, { type: "opinion-piece" }], urlid: { $exists: true, $ne: null }, excerpt: { $exists: true, $ne: "", $type: "string" } };
+const fields = ["_id", "post_id", "tags", "sections", "url", "author", "date_published", "date_modified", "title", "excerpt", "content", "urlid", "custom_section_label", "img_thumbnail", "type", "status"];
+const search = { $or: [{ type: "article" }, { type: "opinion-piece" }], urlid: { $exists: true, $ne: null }, excerpt: { $exists: true, $ne: "", $type: "string" }, status: "publish" };
 
 async function extract_articles(articles) {
     await mkdirp(path);
@@ -29,6 +30,11 @@ async function extract_articles(articles) {
 
 export async function extract_article(article, force = false) {
     if (!force || existsSync(`${path}/${article._id}.json`)) return;
+    const date = moment(article.date_published);
+    date.tz("Africa/Johannesburg");
+    const date_str = date.format("YYYY-MM-DD");
+    const url = `https://www.dailymaverick.co.za/${article.type === "opinion-piece" ? "opinion" : "article"}/${date_str}-${article.urlid}`;
+    article.url = url;
     await fs.writeFile(`${path}/${article._id}.json`, JSON.stringify(article, null, 2));
 }
 
