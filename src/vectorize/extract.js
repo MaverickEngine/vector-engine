@@ -31,7 +31,7 @@ async function extract_articles(articles) {
 export async function extract_article(article, force = false) {
     if (!force || existsSync(`${path}/${article._id}.json`)) return;
     const date = moment(article.date_published);
-    date.tz("Africa/Johannesburg");
+    // date.tz("Africa/Johannesburg");
     const date_str = date.format("YYYY-MM-DD");
     const url = `https://www.dailymaverick.co.za/${article.type === "opinion-piece" ? "opinion" : "article"}/${date_str}-${article.urlid}`;
     article.url = url;
