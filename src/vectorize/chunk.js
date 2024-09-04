@@ -7,7 +7,7 @@ import { existsSync } from "fs";
 // Constants
 const path = "articles/2-chunked";
 const previous_path = "articles/1-cleaned";
-const max_chunk_size = 1000;
+const max_chunk_size = 2000;
 
 function chunkText(content, max_words) {
     function wordCount(text) {
