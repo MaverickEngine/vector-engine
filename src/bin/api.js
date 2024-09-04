@@ -1,6 +1,6 @@
 import { fastify } from "fastify";
 import { fastifyCors } from "@fastify/cors";
-import { init as recommend_init, similar, close as recommend_close } from "../libs/recommend.js";
+import { init as recommend_init, similar, close as recommend_close, qdrant_search } from "../libs/recommend.js";
 import { get, set } from "../libs/cache.js";
 import JXPHelper from "jxp-helper";
 import { vectorize_one } from "../libs/vectorize_one.js";
@@ -75,30 +75,39 @@ app.get("/similar/:id", async (req, res) => {
             "$match": {
                 post_id: {
                     $in: article_post_ids
-                }
+                },
+                // status: "publish"
             }
         },
         {
             "$project": {
                 post_id: 1,
-                img_thumbnail: 1
+                title: 1,
+                url: 1,
+                urlid: 1,
+                type: 1,
+                author: 1,
+                date_published: 1,
+                sections: 1,
+                excerpt: 1,
+                img_full: 1,
+                img_thumbnail: 1,
+                status: 1,
+                custom_section_label: 1,
             }
         }
     ]
-    const thumbnails = (await jxp.aggregate("article", query)).data;
-    const result = articles.map(article => ({
-        score: article.score,
-        post_id: article.payload.post_id,
-        title: article.payload.title,
-        url: article.payload.url,
-        author: article.payload.author,
-        date_published: article.payload.date_published,
-        sections: article.payload.sections,
-        excerpt: article.payload.excerpt,
-        thumbnail: thumbnails.find(thumbnail => thumbnail.post_id === article.payload.post_id)?.img_thumbnail
-    }));
-    res.send(result);
-    await set(key, result);
+    const api_articles = (await jxp.aggregate("article", query)).data;
+    console.log(api_articles);
+    for (let api_article of api_articles) {
+        const article = articles.find(article => article.payload.post_id === api_article.post_id);
+        api_article.score = article.score;
+        api_article.url = article.payload.url;
+    }
+    api_articles.sort((a, b) => b.score - a.score);
+
+    res.send(api_articles);
+    await set(key, api_articles);
 });
 
 app.post("/vectorize", async (req, res) => {
@@ -110,7 +119,7 @@ app.post("/vectorize", async (req, res) => {
         res.status(400).send("post_id and revengine_id are mutually exclusive");
     }
     let article;
-    const fields = ["_id", "post_id", "tags", "sections", "url", "author", "date_published", "date_modified", "title", "excerpt", "content", "urlid", "custom_section_label", "img_thumbnail", "type"];
+    const fields = ["_id", "post_id", "tags", "sections", "url", "author", "date_published", "date_modified", "title", "excerpt", "content", "urlid", "custom_section_label", "img_thumbnail", "type", "status"];
     if (post_id) {
         article = await find_article_by_post_id(post_id, fields);
         if (!article) {
@@ -126,6 +135,12 @@ app.post("/vectorize", async (req, res) => {
         }
     }
     const result = await vectorize_one(article);
+    res.send(result);
+});
+
+app.get("/search/:query", async (req, res) => {
+    const { query } = req.params;
+    const result = await qdrant_search(query, 5);
     res.send(result);
 });
 

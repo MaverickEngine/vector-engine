@@ -61,6 +61,7 @@ export async function save_article(_id) {
                 custom_section_label: article.custom_section_label,
                 img_thumbnail: article.img_thumbnail,
                 type: article.type,
+                status: article.status,
             }
         }
         // console.log(data);

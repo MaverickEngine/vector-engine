@@ -178,6 +178,7 @@ export class Qdrant {
             "group_by": "post_id",
             "group_size": 1,
         }
+        console.log(JSON.stringify(search));
         const response = await fetch(`${this.url}/collections/${collection}/points/search`, {
             method: 'POST',
             headers: {

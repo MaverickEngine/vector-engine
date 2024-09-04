@@ -51,13 +51,14 @@ function clean_article_map(article) {
         post_id: article.post_id,
         tags: article.tags || [],
         sections: article.sections || [],
-        url: `https://www.dailymaverick.co.za/article/${article.date_published.substring(0, 10)}-${article.urlid}/`,
+        url: article.url || `https://www.dailymaverick.co.za/article/${article.date_published.substring(0, 10)}-${article.urlid}/`,
         author: article.author || "",
         date_published: article.date_published,
         date_modified: article.date_modified,
         title,
         excerpt,
         content,
+        status: article.status,
         word_count: (`${title}\n${excerpt}\n${content}`).split(/\s+/).length
     }
 }

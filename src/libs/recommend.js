@@ -16,12 +16,29 @@ const MODEL = "all-minilm:latest"
 export async function init() { }
 
 export async function qdrant_search(content, limit, filter = {}) {
+    console.log(`Searching for: ${content}`);
     const embeddings = await ollama.embeddings({ prompt: content, model: MODEL });
     const result = await qdrant.search(COLLECTION, {
         filter,
-        top: limit,
+        top: limit * 10,
         vectors: embeddings.embedding
     });
+    // Rerank with most recent articles first
+    // Find lowest and highest date_published
+    const dates = result.map(r => new Date(r.payload.date_published).getTime());
+    dates.sort();
+    const min_date = dates[0];
+    const max_date = dates[dates.length - 1];
+    // Normalize dates to 0-1
+    const date_range = max_date - min_date;
+    result.forEach((r, i) => {
+        const val = new Date(r.payload.date_published).getTime();
+        r.normalized_date = (val - min_date) / (max_date - min_date);
+        r.score = (r.score * 0.7) + (r.normalized_date * 0.3);
+    });
+
+    result.sort((a, b) => b.score - a.score);
+    // result.splice(limit);
     return result;
 }
 
