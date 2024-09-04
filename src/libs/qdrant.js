@@ -1,4 +1,5 @@
 const url = process.env.QDRANT_URL || 'http://127.0.0.1:6333';
+const distance = process.env.MODEL_DISTANCE || 'Cosine';
 
 export class Qdrant {
     url;
@@ -21,14 +22,15 @@ export class Qdrant {
         return false;
     }
 
-    async createCollection(collection) {
+    async createCollection(collection, vector_size) {
         if (await this.collectionExists(collection)) {
             return false;
         }
+        console.log("Creating collection", collection);
         const config = {
             vectors: {
-                size: 384,
-                distance: 'Cosine',
+                size: vector_size || 1024,
+                distance,
                 on_disk: true
             }
         }
@@ -107,7 +109,7 @@ export class Qdrant {
         });
         const result = await response.json();
         if (result.status !== "ok") {
-            console.log(result)
+            // console.log(result)
             throw new Error(result.statusText || "Unknown error");
         }
         return result.result.sort((a, b) => b.score - a.score);
@@ -147,7 +149,7 @@ export class Qdrant {
         });
         const result = await response.json();
         if (result.status !== "ok") {
-            console.log(result)
+            // console.log(result)
             throw new Error(result.statusText || "Unknown error");
         }
         if (!result.result) {
@@ -178,7 +180,7 @@ export class Qdrant {
             "group_by": "post_id",
             "group_size": 1,
         }
-        console.log(JSON.stringify(search));
+        // console.log(JSON.stringify(search));
         const response = await fetch(`${this.url}/collections/${collection}/points/search`, {
             method: 'POST',
             headers: {

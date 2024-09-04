@@ -15,7 +15,8 @@ const ollama = new Ollama({
 const path = "articles/3-embeddings";
 const previous_path = "articles/2-chunked";
 // const model = "llama3:8b";
-const model = "all-minilm:latest"
+// const model = "all-minilm:latest"
+const model = process.env.MODEL || "mxbai-embed-large:latest";
 
 async function embedding(article) {
     const chunks = article.chunks;
@@ -27,15 +28,29 @@ async function embedding(article) {
             })
             chunk.embedding = response.embedding;
         } catch (error) {
-            console.log(`Error parsing response: ${response}`);
+            console.log(`Error parsing response: ${error}`);
             return null;
         }
     }
     return chunks;
 }
 
+async function ensure_model() {
+    const list = await ollama.list();
+    for (let installed_model of list.models) {
+        if (installed_model.name === model) {
+            return true;
+        }
+    }
+    console.log(`Model ${model} not found, downloading...`);
+    const response = await ollama.pull({ model });
+    if (!response.status === "success") {
+        throw (`Model ${model} not found, failed to download`);
+    }
+}
 export async function Embeddings() {
     const time_start = Date.now();
+    await ensure_model();
     await mkdirp(path);
     const article_files = await glob(`${previous_path}/*.json`);
     const bar1 = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);

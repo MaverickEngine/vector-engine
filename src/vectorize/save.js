@@ -10,9 +10,18 @@ const collectionName = "article_embeddings";
 
 const qdrant = new Qdrant();
 
+async function createCollection() {
+    // Sample a file to get size of vectors
+    const article_file = await glob(`${previous_path}/*.json`);
+    const article = JSON.parse(await fs.readFile(article_file[0], "utf8"));
+    const chunks = article.chunks;
+    const vector_size = chunks[0].embedding.length;
+    await qdrant.createCollection(collectionName, vector_size);
+}
+
 export async function Save() {
     // Use connect method to connect to the server
-    qdrant.createCollection(collectionName);
+    await createCollection();
     const time_start = Date.now();
     const article_files = await glob(`${previous_path}/*.json`);
     const bar1 = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
@@ -64,11 +73,12 @@ export async function save_article(_id) {
                 status: article.status,
             }
         }
-        // console.log(data);
+        // console.log(data.vectors.length);
         const response = await qdrant.addRecords(collectionName, [data]);
         if (!response) {
             throw (`Error upserting ${article._id}`);
         }
+        // console.log(response);
         result.push({
             id,
             response

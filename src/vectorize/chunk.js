@@ -69,7 +69,7 @@ function chunkText(content, max_words) {
 }
 
 function chunk(article) {
-    const header = `URL: ${article.url}\nTitle: ${article.title}\npost_id: ${article.post_id}\nDate: ${article.date_published}\n\n<!--starts-->\n\n`;
+    const header = `URL: ${article.url}\nTitle: ${article.title}\nAuthor: ${article.author}\npost_id: ${article.post_id}\nDate: ${article.date_published}\nTags: ${article.tags.join(", ")}\nSections: ${article.sections.join(", ")}\n\n<!--starts-->\n\n`;
     const footer = `<!--ends-->\n\n`;
     const body = `${article.excerpt}\n\n${article.content}`;
     if (body.length < max_chunk_size) {
