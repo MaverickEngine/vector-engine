@@ -61,6 +61,14 @@ docker-compose build
 docker-compose up -d
 ```
 
+## MongoDB import
+
+If you want to import the articles into the Docker MongoDB instance, first copy your articles.bson and articles.metadata.json files to ./mongodb_dump. Then run the following command:
+
+```bash
+docker exec -i vectorizer-mongodb-1 /usr/bin/mongorestore --uri "mongodb://mongodb" -d dm -c articles /data/mongodb_dump/articles.bson
+```
+
 ## Bulk Vectorizing
 
 To bulk vectorize all the articles, run the following command:

@@ -49,6 +49,18 @@ services:
     # command: 
     #   - /bin/ollama pull all-minilm
     #   - ollama serve
-      
+  
+  mongodb:
+    image: mongo:latest
+    deploy:
+      mode: global
+      replicas: 1
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongodb_dump:/data/mongodb_dump
+    ports:
+      - 27017:27017
+
 volumes:
   qdrant_data:
+  mongodb_data:
