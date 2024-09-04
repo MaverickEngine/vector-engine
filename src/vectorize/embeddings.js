@@ -17,6 +17,7 @@ const previous_path = "articles/2-chunked";
 // const model = "llama3:8b";
 // const model = "all-minilm:latest"
 const model = process.env.MODEL || "mxbai-embed-large:latest";
+const concurrency = 10;
 
 async function embedding(article) {
     const chunks = article.chunks;
@@ -48,6 +49,7 @@ async function ensure_model() {
         throw (`Model ${model} not found, failed to download`);
     }
 }
+
 export async function Embeddings() {
     const time_start = Date.now();
     await ensure_model();
@@ -56,19 +58,25 @@ export async function Embeddings() {
     const bar1 = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
     bar1.start(article_files.length, 0);
     let i = 0;
-    for (let article_file of article_files) {
-        i++;
-        const _id = article_file.split("/").pop().split(".")[0];
-        if (existsSync(`${path}/${_id}.json`)) {
+    const processChunk = async (chunk) => {
+        await Promise.all(chunk.map(async (article_file) => {
+            i++;
+            const _id = article_file.split("/").pop().split(".")[0];
+            if (existsSync(`${path}/${_id}.json`)) {
+                bar1.increment();
+                return;
+            }
+            try {
+                await embed_article(_id);
+            } catch (error) {
+                console.error(`Error processing ${article_file}: ${error}`);
+            }
             bar1.increment();
-            continue;
-        }
-        try {
-            await embed_article(_id);
-        } catch (error) {
-            console.error(`Error processing ${article_file}: ${error}`);
-        }
-        bar1.increment();
+        }));
+    };
+    for (let j = 0; j < article_files.length; j += concurrency) {
+        const chunk = article_files.slice(j, j + concurrency);
+        await processChunk(chunk);
     }
     bar1.stop();
     const time_end = Date.now();
