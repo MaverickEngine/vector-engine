@@ -30,7 +30,7 @@ services:
     deploy:
       mode: global
     ports:
-      - 6335:6333
+      - "127.0.0.1:6335:6333"
 
   redis:
     image: redis:latest
