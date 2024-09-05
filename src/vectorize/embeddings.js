@@ -17,7 +17,7 @@ const previous_path = "articles/2-chunked";
 // const model = "llama3:8b";
 // const model = "all-minilm:latest"
 const model = process.env.MODEL || "mxbai-embed-large:latest";
-const concurrency = 10;
+const concurrency = 20;
 
 async function embedding(article) {
     const chunks = article.chunks;
