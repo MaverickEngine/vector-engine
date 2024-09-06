@@ -33,7 +33,7 @@ export async function extract_article(article, force = false) {
     const date = moment(article.date_published);
     // date.tz("Africa/Johannesburg");
     const date_str = date.format("YYYY-MM-DD");
-    const url = `https://www.dailymaverick.co.za/${article.type === "opinion-piece" ? "opinion" : "article"}/${date_str}-${article.urlid}`;
+    const url = `https://www.dailymaverick.co.za/${article.type === "opinion-piece" ? "opinionista" : "article"}/${date_str}-${article.urlid}`;
     article.url = url;
     await fs.writeFile(`${path}/${article._id}.json`, JSON.stringify(article, null, 2));
 }
