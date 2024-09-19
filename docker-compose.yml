@@ -46,8 +46,15 @@ services:
     #   - 8000:8000
     deploy:
       mode: global
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     volumes:
       - ./models:/.ollama/models
+    privileged: true
     # command: 
     #   - /bin/ollama pull all-minilm
     #   - ollama serve
