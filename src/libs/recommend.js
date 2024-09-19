@@ -11,13 +11,13 @@ const ollama = new Ollama({
 const qdrant = new Qdrant();
 
 const COLLECTION = "article_embeddings";
-const MODEL = "all-minilm:latest"
+const model = process.env.MODEL || "mxbai-embed-large:latest";
 
 export async function init() { }
 
 export async function qdrant_search(content, limit, filter = {}) {
     console.log(`Searching for: ${content}`);
-    const embeddings = await ollama.embeddings({ prompt: content, model: MODEL });
+    const embeddings = await ollama.embeddings({ prompt: content, model });
     const result = await qdrant.search(COLLECTION, {
         filter,
         top: limit * 10,
@@ -38,7 +38,7 @@ export async function qdrant_search(content, limit, filter = {}) {
     });
 
     result.sort((a, b) => b.score - a.score);
-    // result.splice(limit);
+    result.splice(limit);
     return result;
 }
 
