@@ -11,6 +11,7 @@ services:
     depends_on:
       - qdrant
       - redis
+      - ollama
     environment:
       - QDRANT_HOST=qdrant
       - QDRANT_URL=http://qdrant:6333
@@ -38,26 +39,14 @@ services:
       mode: global
 
   ollama:
-    # image: ollama/ollama:latest
     build:
       context: ./ollama
       dockerfile: Dockerfile
-    # ports:
-    #   - 8000:8000
     deploy:
       mode: global
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
     volumes:
       - ./models:/.ollama/models
     privileged: true
-    # command: 
-    #   - /bin/ollama pull all-minilm
-    #   - ollama serve
   
   mongodb:
     image: mongo:latest
