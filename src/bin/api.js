@@ -1,6 +1,6 @@
 import { fastify } from "fastify";
 import { fastifyCors } from "@fastify/cors";
-import { init as recommend_init, similar, close as recommend_close, qdrant_search } from "../libs/recommend.js";
+import { init as recommend_init, similar, qdrant_search } from "../libs/recommend.js";
 import { get, set } from "../libs/cache.js";
 import JXPHelper from "jxp-helper";
 import { vectorize_one } from "../libs/vectorize_one.js";
@@ -17,6 +17,9 @@ app.register(fastifyCors, {
     origin: true,
     credentials: true,
 });
+
+// Add this line to register the formbody plugin
+// app.register(fastifyFormbody);
 
 const port = process.env.PORT || 8001;
 const host = process.env.HOST || "0.0.0.0";
@@ -49,7 +52,6 @@ app.get("/similar/:id", async (req, res) => {
     const cached = await get(key);
     // let cached = false;
     if (cached) {
-        console.log(`Similar articles for ${req.params.id} from cache`);
         res.send(cached);
         return;
     }
@@ -98,7 +100,7 @@ app.get("/similar/:id", async (req, res) => {
         }
     ]
     const api_articles = (await jxp.aggregate("article", query)).data;
-    console.log(api_articles);
+    // console.log(api_articles);
     for (let api_article of api_articles) {
         const article = articles.find(article => article.payload.post_id === api_article.post_id);
         api_article.score = article.score;
@@ -108,6 +110,34 @@ app.get("/similar/:id", async (req, res) => {
 
     res.send(api_articles);
     await set(key, api_articles);
+});
+
+app.post("/similar", async (req, res) => {
+    console.log(req.body);
+    const { post_id, revengine_id, limit = 5, history = [], previous_days = 30 } = req.body;
+    let _id = req.body.revengine_id;
+    if (!post_id && !revengine_id) {
+        res.status(400).send("post_id or revengine_id is required");
+    }
+    const key = `${KEY_PREFIX}-similar_post-${post_id}-${limit}-${previous_days}`;
+    const cached = await get(key);
+    if (cached) {
+        res.send(cached);
+        return;
+    }
+    if (post_id) {
+        if (Number.isInteger(post_id * 1)) {
+            const article = await find_article_by_post_id(post_id);
+            if (article) {
+                _id = article._id;
+            } else {
+                res.status(404).send("Article not found");
+                return;
+            }
+        }
+    }
+    const result = await similar(_id, { limit: parseInt(limit), history, previous_days: parseInt(previous_days) });
+    res.send(result);
 });
 
 app.post("/vectorize", async (req, res) => {
@@ -144,6 +174,30 @@ app.get("/search/:query", async (req, res) => {
     res.send(result);
 });
 
+app.post("/search", async (req, res) => {
+    // Add a check for req.body
+    if (!req.body) {
+        return res.status(400).send({ error: "Request body is missing" });
+    }
+
+    const {
+        query = '',
+        limit = 5,
+        previous_days = 30,
+        section = null,
+        tag = null,
+        date_start = null,
+        date_end = null,
+        author = null
+    } = req.body;
+
+    if (!query) {
+        return res.status(400).send({ error: "Query is required" });
+    }
+
+    const result = await qdrant_search(query, limit, { previous_days, section, tag, date_start, date_end, author });
+    res.send(result);
+});
 
 export async function init() {
     await recommend_init();

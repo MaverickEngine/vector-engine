@@ -15,14 +15,52 @@ const model = process.env.MODEL || "mxbai-embed-large:latest";
 
 export async function init() { }
 
-export async function qdrant_search(content, limit, filter = {}) {
+export async function qdrant_search(content, limit, { previous_days = 30, section = null, tag = null, author = null }) {
     console.log(`Searching for: ${content}`);
     const embeddings = await ollama.embeddings({ prompt: content, model });
+
+    const filter = { "must": [] };
+
+    if (previous_days > 0) {
+        const start_date = new Date();
+        start_date.setDate(start_date.getDate() - previous_days);
+        filter.must.push({
+            "key": "date_published",
+            "range": {
+                "gte": start_date.toISOString(),
+                "lte": new Date().toISOString()
+            }
+        });
+    }
+
+    if (section) {
+        filter.must.push({
+            "key": "sections",
+            "match": { "value": section }
+        });
+    }
+
+    if (tag) {
+        filter.must.push({
+            "key": "tags",
+            "match": { "value": tag }
+        });
+    }
+
+    // Add author filter
+    if (author) {
+        filter.must.push({
+            "key": "author",
+            "match": { "value": author }
+        });
+    }
+
     const result = await qdrant.search(COLLECTION, {
         filter,
         top: limit * 10,
         vectors: embeddings.embedding
     });
+
     // Rerank with most recent articles first
     // Find lowest and highest date_published
     const dates = result.map(r => new Date(r.payload.date_published).getTime());
@@ -78,7 +116,7 @@ export async function search(content, { limit = 5, previous_days = 30, section =
     return result;
 }
 
-export async function similar(_id, { limit = 5, previous_days = 30 }) {
+export async function similar(_id, { limit = 5, history = [], previous_days = 30 }) {
     if (limit > 10) {
         limit = 10;
     }
@@ -97,7 +135,11 @@ export async function similar(_id, { limit = 5, previous_days = 30 }) {
         });
     }
     const id = uuidv5(`${_id}_0`, uuidv5.URL);
-    const result = await qdrant.similarById(COLLECTION, id, limit, filter);
+    console.log({ _id, id });
+    const result = await qdrant.similarById(COLLECTION, id, limit, filter).catch(err => {
+        console.log(err);
+        return [];
+    });
     // console.log(result.map(r => r.score));
     return result;
 }

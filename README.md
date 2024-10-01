@@ -97,6 +97,25 @@ ID can be either a Wordpress post ID or a RevEngine article ID. The endpoint wil
 
 Note that the article must have already been vectorized and stored in the DB.
 
+### POST /similar
+
+This is a more advanced endpoint that can include recommendations based on reading history. It can also be used to find articles from a specific date range, section and/or tag.
+
+Body:
+```json
+{
+    "post_id": 1234, # Either a Wordpress post ID
+    "revengine_id": 5678, # Or a RevEngine article ID
+    "limit": 5,
+    "history": [],
+    "previous_days": 30,
+    "section": "section name",
+    "tag": "tag name",
+    "date_start": "2024-01-01",
+    "date_end": "2024-01-31"
+}
+```
+
 ### POST /search
 
 The body of the request should be a JSON object with the following properties:
@@ -106,7 +125,9 @@ The body of the request should be a JSON object with the following properties:
     "limit": 5,
     "previous_days": 30,
     "section": "section name",
-    "tag": "tag name"
+    "tag": "tag name",
+    "date_start": "2024-01-01",
+    "date_end": "2024-01-31"
 }
 ```
 

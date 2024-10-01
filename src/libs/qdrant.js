@@ -149,8 +149,7 @@ export class Qdrant {
         });
         const result = await response.json();
         if (result.status !== "ok") {
-            // console.log(result)
-            throw new Error(result.statusText || "Unknown error");
+            throw new Error(result.statusText || result.status?.error || "Unknown error");
         }
         if (!result.result) {
             return null;
