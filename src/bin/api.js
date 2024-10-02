@@ -136,8 +136,47 @@ app.post("/similar", async (req, res) => {
             }
         }
     }
-    const result = await similar(_id, { limit: parseInt(limit), history, previous_days: parseInt(previous_days) });
-    res.send(result);
+    const result = await similar(_id, { limit: parseInt(limit), history, previous_days: parseInt(previous_days) }).catch(err => {
+        console.error(err);
+        res.status(500).send(err);
+    });
+    const article_post_ids = result.map(article => article.payload.post_id);
+    const query = [
+        {
+            "$match": {
+                post_id: {
+                    $in: article_post_ids
+                },
+                // status: "publish"
+            }
+        },
+        {
+            "$project": {
+                post_id: 1,
+                title: 1,
+                url: 1,
+                urlid: 1,
+                type: 1,
+                author: 1,
+                date_published: 1,
+                sections: 1,
+                excerpt: 1,
+                img_full: 1,
+                img_thumbnail: 1,
+                status: 1,
+                custom_section_label: 1,
+            }
+        }
+    ]
+    const api_articles = (await jxp.aggregate("article", query)).data;
+    // console.log(api_articles);
+    for (let api_article of api_articles) {
+        const article = result.find(article => article.payload.post_id === api_article.post_id);
+        api_article.score = article.score;
+        api_article.url = article.payload.url;
+    }
+    api_articles.sort((a, b) => b.score - a.score);
+    await set(key, api_articles);
 });
 
 app.post("/vectorize", async (req, res) => {
