@@ -145,6 +145,10 @@ Body:
 }
 ```
 
+### GET /clear_cache
+
+This endpoint will clear the Redis cache.
+
 ## Caching
 
 Caching is set for 24 hours. Response time for the `/similar/:id` endpoint can be as high as ~200ms for an uncached request, but should drop to ~10ms for a cached request.

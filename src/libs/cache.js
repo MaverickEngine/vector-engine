@@ -7,7 +7,7 @@ const redis = new IORedis({
     db: 0,
 });
 
-export function set(key, val, ttl = 60 * 60 * 24) {
+export function set(key, val, ttl = 60 * 60) {
     let json_val = JSON.stringify(val);
     return redis.set(key, json_val, 'EX', ttl);
 }
@@ -18,6 +18,13 @@ export async function get(key) {
         return JSON.parse(json_val);
     } catch (e) {
         return null;
+    }
+}
+
+export async function clear_keys(prefix) {
+    const keys = await redis.keys(`${prefix}*`);
+    for (const key of keys) {
+        await redis.del(key);
     }
 }
 

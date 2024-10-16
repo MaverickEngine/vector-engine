@@ -1,7 +1,7 @@
 import { fastify } from "fastify";
 import { fastifyCors } from "@fastify/cors";
 import { init as recommend_init, similar, qdrant_search } from "../libs/recommend.js";
-import { get, set } from "../libs/cache.js";
+import { get, set, clear_keys } from "../libs/cache.js";
 import JXPHelper from "jxp-helper";
 import { vectorize_one } from "../libs/vectorize_one.js";
 import { config } from "dotenv";
@@ -66,7 +66,7 @@ app.get("/similar/:id", async (req, res) => {
             return;
         }
     }
-    console.log(`Similar articles for ${_id}`);
+    // console.log(`Similar articles for ${_id}`);
     const articles = await similar(_id, { limit, previous_days }).catch(err => {
         console.error(err);
         res.status(500).send(err);
@@ -113,7 +113,7 @@ app.get("/similar/:id", async (req, res) => {
 });
 
 app.post("/similar", async (req, res) => {
-    console.log(req.body);
+    // console.log(req.body);
     const { post_id, revengine_id, limit = 5, history = [], previous_days = 30 } = req.body;
     let _id = req.body.revengine_id;
     if (!post_id && !revengine_id) {
@@ -121,6 +121,7 @@ app.post("/similar", async (req, res) => {
     }
     const key = `${KEY_PREFIX}-similar_post-${post_id}-${limit}-${previous_days}`;
     const cached = await get(key);
+    // let cached = false;
     if (cached) {
         res.send(cached);
         return;
@@ -169,7 +170,6 @@ app.post("/similar", async (req, res) => {
         }
     ]
     const api_articles = (await jxp.aggregate("article", query)).data;
-    // console.log(api_articles);
     for (let api_article of api_articles) {
         const article = result.find(article => article.payload.post_id === api_article.post_id);
         api_article.score = article.score;
@@ -177,6 +177,7 @@ app.post("/similar", async (req, res) => {
     }
     api_articles.sort((a, b) => b.score - a.score);
     await set(key, api_articles);
+    res.send(api_articles);
 });
 
 app.post("/vectorize", async (req, res) => {
@@ -236,6 +237,11 @@ app.post("/search", async (req, res) => {
 
     const result = await qdrant_search(query, limit, { previous_days, section, tag, date_start, date_end, author });
     res.send(result);
+});
+
+app.get("/clear_cache", async (req, res) => {
+    await clear_keys(KEY_PREFIX);
+    res.send({ success: true });
 });
 
 export async function init() {
