@@ -33,14 +33,14 @@ export async function qdrant_search(content, limit, { previous_days = 30, sectio
         });
     }
 
-    if (section) {
+    if (section && section !== "all") {
         filter.must.push({
             "key": "sections",
             "match": { "value": section }
         });
     }
 
-    if (tag) {
+    if (tag && tag !== "all") {
         filter.must.push({
             "key": "tags",
             "match": { "value": tag }
@@ -48,7 +48,7 @@ export async function qdrant_search(content, limit, { previous_days = 30, sectio
     }
 
     // Add author filter
-    if (author) {
+    if (author && author !== "all") {
         filter.must.push({
             "key": "author",
             "match": { "value": author }
@@ -80,40 +80,16 @@ export async function qdrant_search(content, limit, { previous_days = 30, sectio
     return result;
 }
 
-export async function search(content, { limit = 5, previous_days = 30, section = "all", tag = "all" }) {
+export async function search(content, { limit = 5, previous_days = 30, section = "all", tag = "all", author = "all" }) {
     if (limit > 10) {
         limit = 10;
     }
-    const start_date = new Date();
-    start_date.setDate(start_date.getDate() - previous_days);
-    const filter = { "must": [] }
-    if (previous_days > 0) {
-        filter.must.push({
-            "key": "date_published",
-            "range": {
-                "gte": start_date.toISOString(),
-                "lte": new Date().toISOString()
-            }
-        });
-    }
-    if (section !== "all") {
-        filter.must.push({
-            "key": "sections",
-            "match": {
-                "value": section
-            }
-        });
-    }
-    if (tag !== "all") {
-        filter.must.push({
-            "key": "tags",
-            "match": {
-                "value": tag
-            }
-        });
-    }
-    const result = await qdrant_search(content, limit, filter);
-    return result;
+    return await qdrant_search(content, limit, {
+        previous_days,
+        section,
+        tag,
+        author
+    });
 }
 
 export async function similar(_id, { limit = 5, history = [], previous_days = 30 }) {

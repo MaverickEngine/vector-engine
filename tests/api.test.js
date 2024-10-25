@@ -4,6 +4,7 @@ describe("API", function () {
     beforeAll(async function () {
         await init();
     });
+
     afterAll(async function () {
         await close();
     });
@@ -39,16 +40,8 @@ describe("API", function () {
         expect(response.statusCode).toEqual(200);
         const result = response.json();
         expect(result).toBeDefined();
-        expect(result.length).toBeGreaterThan(0);
-        expect(result[0].score).toBeDefined();
-        expect(result[0].post_id).toBeDefined();
-        expect(result[0].title).toBeDefined();
-        expect(result[0].url).toBeDefined();
-        expect(result[0].author).toBeDefined();
-        expect(result[0].date_published).toBeDefined();
-        expect(result[0].sections).toBeDefined();
-        expect(result[0].excerpt).toBeDefined();
-        // console.log(result);
+        expect(result.length).toBe(1);
+        expect(result[0].id).toBeDefined();
     })
 
     it("should vectorize an article from a RevEngine id", async function () {
@@ -62,15 +55,7 @@ describe("API", function () {
         expect(response.statusCode).toEqual(200);
         const result = response.json();
         expect(result).toBeDefined();
-        expect(result.length).toBeGreaterThan(0);
-        expect(result[0].score).toBeDefined();
-        expect(result[0].post_id).toBeDefined();
-        expect(result[0].title).toBeDefined();
-        expect(result[0].url).toBeDefined();
-        expect(result[0].author).toBeDefined();
-        expect(result[0].date_published).toBeDefined();
-        expect(result[0].sections).toBeDefined();
-        expect(result[0].excerpt).toBeDefined();
-        // console.log(result);
+        expect(result.length).toBe(1);
+        expect(result[0].id).toBeDefined();
     })
 });

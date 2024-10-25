@@ -20,6 +20,7 @@ services:
     volumes:
       - ./articles:/app/articles
       - ./src:/app/src
+      - ./tests:/app/tests
     deploy:
       mode: replicated
       replicas: 1
