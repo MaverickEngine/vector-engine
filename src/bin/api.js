@@ -210,7 +210,16 @@ app.post("/vectorize", async (req, res) => {
 
 app.get("/search/:query", async (req, res) => {
     const { query } = req.params;
-    const result = await qdrant_search(query, 5);
+    const limit = req.query.limit || 5;
+    const options = {
+        previous_days: req.query.previous_days || 30,
+        section: req.query.section || null,
+        tag: req.query.tag || null,
+        date_start: req.query.date_start || null,
+        date_end: req.query.date_end || null,
+        author: req.query.author || null,
+    };
+    const result = await qdrant_search(query, limit, options);
     res.send(result);
 });
 

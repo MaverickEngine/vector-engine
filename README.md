@@ -127,11 +127,31 @@ The body of the request should be a JSON object with the following properties:
     "section": "section name",
     "tag": "tag name",
     "date_start": "2024-01-01",
-    "date_end": "2024-01-31"
+    "date_end": "2024-01-31",
+    "author": "author name"
 }
 ```
 
 The endpoint will return the 5 most similar articles to the provided search query.
+
+### GET /search/:query
+
+Works the same as the POST /search endpoint, but the query parameters are passed in the URL.
+
+Eg. `/search/who%20won%20the%20trump%20harris%20debate?limit=10&section=South%20Africa`
+
+Parameters:
+```json
+{
+    "limit": 5,
+    "previous_days": 30,
+    "section": null,
+    "tag": null,
+    "date_start": null,
+    "date_end": null,
+    "author": null
+}
+```
 
 ### POST /vectorize
 
