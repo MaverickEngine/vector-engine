@@ -14,6 +14,8 @@ program
     .option("-ch", "--chunk", "Chunk text")
     .option("-em", "--embeddings", "Generate embeddings")
     .option("-s", "--save", "Save embeddings")
+    .option("-sd", "--start-date <date>", "Start date for filtering articles (YYYY-MM-DD)")
+    .option("-ed", "--end-date <date>", "End date for filtering articles (YYYY-MM-DD)")
     .parse(process.argv);
 
 const options = program.opts();
@@ -25,7 +27,7 @@ if (options.a === true) {
 
 if (options.e === true) {
     console.log("Extracting text...");
-    await Extract().catch(console.error);
+    await Extract(options.startDate, options.endDate).catch(console.error);
 }
 
 if (options.c === true) {
@@ -50,7 +52,7 @@ if (options.s === true) {
 
 async function vectorize() {
     console.time("Vectorize");
-    await Extract();
+    await Extract(options.startDate, options.endDate);
     console.log("Cleaning...");
     await Clean();
     console.log("Chunking...");

@@ -1,6 +1,6 @@
 {
   "name": "vectorizer",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "main": "clean.js",
   "dependencies": {
     "@fastify/cors": "^10.0.1",

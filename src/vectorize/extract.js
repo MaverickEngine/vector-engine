@@ -38,13 +38,26 @@ export async function extract_article(article, force = false) {
     await fs.writeFile(`${path}/${article._id}.json`, JSON.stringify(article, null, 2));
 }
 
-export async function Extract() {
+export async function Extract(startDate, endDate) {
     // Use connect method to connect to the server
     await client.connect();
     const db = client.db(dbName);
     const collection = db.collection("articles");
 
-    const count = await collection.countDocuments(search);
+    const dateFilter = {};
+    if (startDate) {
+        dateFilter.$gte = new Date(startDate);
+    }
+    if (endDate) {
+        dateFilter.$lte = new Date(endDate);
+    }
+
+    const searchWithDate = {
+        ...search,
+        ...(startDate || endDate ? { date_modified: dateFilter } : {})
+    };
+
+    const count = await collection.countDocuments(searchWithDate);
     console.log(`Found ${count} articles`);
     const batch_count = max_batch_count > 0 ? max_batch_count : Math.ceil(count / batch_size);
     const bar1 = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
@@ -55,7 +68,7 @@ export async function Extract() {
         for (let field of fields) {
             field_obj[field] = 1;
         }
-        const batch_articles = await collection.find(search).project(field_obj).skip(batch_start).limit(batch_size).toArray();
+        const batch_articles = await collection.find(searchWithDate).project(field_obj).skip(batch_start).limit(batch_size).toArray();
         await extract_articles(batch_articles);
         bar1.increment();
     }

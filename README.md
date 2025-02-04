@@ -77,6 +77,12 @@ To bulk vectorize all the articles, run the following command:
 node src/bin/vectorize.js -a
 ```
 
+You can also specify a start and/or end date for filtering articles during the extraction process:
+
+```bash
+node src/bin/vectorize.js -e --start-date YYYY-MM-DD --end-date YYYY-MM-DD
+```
+
 The process should take a few hours to complete. It creates a folder called "articles" which contains the articles in each step of the process. If you want to rerun the process from the last point, do not delete this folder and the command will skip most of the work. If you want to start over, delete the folder and rerun the command.
 
 You can run just one step of the process at a time. Run the following to get all the options:
