@@ -58,7 +58,7 @@ services:
       - mongodb_data:/data/db
       - ./mongodb_dump:/data/mongodb_dump
     ports:
-      - 27017:27017
+      - "127.0.0.1:27018:27017"
 
 volumes:
   qdrant_data:
