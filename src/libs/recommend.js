@@ -111,12 +111,10 @@ export async function similar(_id, { limit = 5, history = [], previous_days = 30
         });
     }
     const id = uuidv5(`${_id}_0`, uuidv5.URL);
-    // console.log({ _id, id });
     const result = await qdrant.similarById(COLLECTION, id, limit, filter).catch(err => {
-        console.log(err);
+        console.log("Error finding similar articles", { _id, limit, history, previous_days });
         return [];
     });
-    // console.log(result.map(r => r.score));
     return result;
 }
 
