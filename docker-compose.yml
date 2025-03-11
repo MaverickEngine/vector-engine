@@ -1,6 +1,6 @@
 services:
   app:
-    image: jasony/vector-engine:latest
+    image: harbor.revengine.dailymaverick.co.za/revengine/vector-engine:latest
     build:
       context: .
       dockerfile: Dockerfile
