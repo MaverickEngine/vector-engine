@@ -126,9 +126,10 @@ app.post("/similar", async (req, res) => {
         res.send(cached);
         return;
     }
+    let article;
     if (post_id) {
         if (Number.isInteger(post_id * 1)) {
-            const article = await find_article_by_post_id(post_id);
+            article = await find_article_by_post_id(post_id);
             if (article) {
                 _id = article._id;
             } else {
@@ -137,9 +138,12 @@ app.post("/similar", async (req, res) => {
             }
         }
     }
-    const result = await similar(_id, { limit: parseInt(limit), history, previous_days: parseInt(previous_days) }).catch(err => {
+    const result = await similar(_id, { limit: parseInt(limit), history, previous_days: parseInt(previous_days) }).catch(async err => {
         console.error(err);
         res.status(500).send(err);
+        if (article) {
+            await vectorize_one(article);
+        }
     });
     const article_post_ids = result.map(article => article.payload.post_id);
     const query = [
