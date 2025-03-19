@@ -137,14 +137,25 @@ app.post("/similar", async (req, res) => {
                 return;
             }
         }
+    } else {
+        article = await find_article_by_revengine_id(_id);
     }
     const result = await similar(_id, { limit: parseInt(limit), history, previous_days: parseInt(previous_days) }).catch(async err => {
         console.error(err);
         res.status(500).send(err);
         if (article) {
-            await vectorize_one(article);
+            await vectorize_article(article._id);
         }
+        return [];
     });
+    if (result.length === 0) {
+        console.log("No similar articles found for ", _id);
+        res.send([]);
+        if (article) {
+            await vectorize_article(article._id);
+        }
+        return;
+    }
     const article_post_ids = result.map(article => article.payload.post_id);
     const query = [
         {
@@ -184,6 +195,18 @@ app.post("/similar", async (req, res) => {
     res.send(api_articles);
 });
 
+const vectorize_article = async (article_id) => {
+    const fields = ["_id", "post_id", "tags", "sections", "url", "author", "date_published", "date_modified", "title", "excerpt", "content", "urlid", "custom_section_label", "img_thumbnail", "type", "status"];
+    const article = await find_article_by_revengine_id(article_id, fields);
+    if (!article) {
+        console.log("Article not found ", article_id);
+        return;
+    }
+    console.log("Vectorizing article ", article._id, article.post_id, article.title);
+    const result = await vectorize_one(article);
+    return result;
+}
+
 app.post("/vectorize", async (req, res) => {
     const { post_id, revengine_id } = req.body;
     if (!post_id && !revengine_id) {
@@ -192,23 +215,16 @@ app.post("/vectorize", async (req, res) => {
     if (post_id && revengine_id) {
         res.status(400).send("post_id and revengine_id are mutually exclusive");
     }
-    let article;
-    const fields = ["_id", "post_id", "tags", "sections", "url", "author", "date_published", "date_modified", "title", "excerpt", "content", "urlid", "custom_section_label", "img_thumbnail", "type", "status"];
+    let article_id;
     if (post_id) {
-        article = await find_article_by_post_id(post_id, fields);
-        if (!article) {
+        const article = await find_article_by_post_id(post_id, ["_id"]);
+        article_id = article._id;
+        if (!article_id) {
             res.status(404).send("Article not found");
             return;
         }
     }
-    if (revengine_id) {
-        article = await find_article_by_revengine_id(revengine_id, fields);
-        if (!article) {
-            res.status(404).send("Article not found");
-            return;
-        }
-    }
-    const result = await vectorize_one(article);
+    const result = await vectorize_article(article_id);
     res.send(result);
 });
 
