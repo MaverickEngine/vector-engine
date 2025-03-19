@@ -7,7 +7,7 @@ services:
     env_file:
       - .env
     ports:
-      - 8001:8001
+      - 8002:8001
     depends_on:
       - qdrant
       - redis
@@ -24,6 +24,30 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+
+  test:
+    image: harbor.revengine.dailymaverick.co.za/revengine/vector-engine:latest
+    depends_on:
+      - qdrant
+      - redis
+      - ollama
+      - mongodb
+      - mock-api
+    environment:
+      - QDRANT_HOST=qdrant
+      - QDRANT_URL=http://qdrant:6333
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - OLLAMA_URL=http://ollama:11434
+      - JXP_API_URL=http://mock-api:3000
+      - JXP_API_KEY=test_key
+      - NODE_ENV=test
+      - MONGODB_URI=mongodb://mongodb:27017/vectorizer
+    volumes:
+      - ./articles:/app/articles
+      - ./src:/app/src
+      - ./tests:/app/tests
+    command: npm test
 
   qdrant:
     image: qdrant/qdrant:latest
@@ -59,6 +83,17 @@ services:
       - ./mongodb_dump:/data/mongodb_dump
     ports:
       - "127.0.0.1:27018:27017"
+
+  mock-api:
+    image: node:18-alpine
+    working_dir: /app
+    volumes:
+      - ./tests/mocks:/app
+    command: >
+      sh -c "npm install express cors --no-save && 
+             node mock-api-server.js"
+    ports:
+      - "127.0.0.1:3010:3000"
 
 volumes:
   qdrant_data:

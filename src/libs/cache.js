@@ -1,11 +1,17 @@
 import IORedis from 'ioredis'
 
+// Create Redis client
 const redis = new IORedis({
     host: process.env.REDIS_HOST || 'localhost',
     port: process.env.REDIS_PORT || 6379,
     password: process.env.REDIS_PASSWORD || '',
     db: 0,
 });
+
+// Function to quit Redis connection (used in tests)
+export function closeRedisConnection() {
+    return redis.quit();
+}
 
 export function set(key, val, ttl = 60 * 60) {
     let json_val = JSON.stringify(val);

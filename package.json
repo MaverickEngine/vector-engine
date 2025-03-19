@@ -38,7 +38,7 @@
     "typescript": "^5.8.2"
   },
   "scripts": {
-    "test": "jest",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.config.mjs --forceExit",
     "start": "node --watch src/bin/api.js"
   },
   "author": "Jason Norwood-Young <jason@10layer.com>",
