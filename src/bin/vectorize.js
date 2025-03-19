@@ -11,11 +11,11 @@ program
     .option("-a, --all", "Run all steps")
     .option("-e, --extract", "Extract text from files")
     .option("-c, --clean", "Clean text")
-    .option("-ch, --chunk", "Chunk text")
-    .option("-em, --embeddings", "Generate embeddings")
+    .option("-h, --chunk", "Chunk text")
+    .option("-m, --embeddings", "Generate embeddings")
     .option("-s, --save", "Save embeddings")
-    .option("-sd, --start-date <date>", "Start date for filtering articles (YYYY-MM-DD)")
-    .option("-ed, --end-date <date>", "End date for filtering articles (YYYY-MM-DD)")
+    .option("-t, --start-date <date>", "Start date for filtering articles (YYYY-MM-DD)")
+    .option("-d, --end-date <date>", "End date for filtering articles (YYYY-MM-DD)")
     .parse(process.argv);
 
 const options = program.opts();
@@ -62,7 +62,6 @@ async function vectorize() {
     console.log("Saving...");
     await Save();
     console.timeEnd("Vectorize");
+    // Exit the process
+    process.exit(0);
 }
-
-// vectorize()
-//     .catch(console.error);
