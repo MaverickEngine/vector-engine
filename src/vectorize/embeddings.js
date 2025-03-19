@@ -90,6 +90,7 @@ export async function embed_article(_id, force = false) {
     const article_file = `${previous_path}/${_id}.json`;
     const article = JSON.parse(await fs.readFile(article_file, "utf8"));
     article.chunks = await embedding(article);
+    await mkdirp(path);
     await fs.writeFile(`${path}/${_id}.json`, JSON.stringify(article, null, 2));
 }
 
