@@ -99,7 +99,12 @@ export async function similar(_id, { limit = 5, history = [], previous_days = 30
     const start_date = new Date();
     start_date.setDate(start_date.getDate() - previous_days);
     const filter = {
-        must: []
+        must: [
+            {
+                "key": "status",
+                "match": { "value": "publish" }
+            }
+        ]
     };
     if (previous_days > 0) {
         filter.must.push({
