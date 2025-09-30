@@ -29,7 +29,7 @@ async function extract_articles(articles) {
 }
 
 export async function extract_article(article, force = false) {
-    if (!force || existsSync(`${path}/${article._id}.json`)) return;
+    if (!force && existsSync(`${path}/${article._id}.json`)) return;
     const date = moment(article.date_published);
     // date.tz("Africa/Johannesburg");
     const date_str = date.format("YYYY-MM-DD");
@@ -37,6 +37,11 @@ export async function extract_article(article, force = false) {
     article.url = url;
     await mkdirp(path);
     await fs.writeFile(`${path}/${article._id}.json`, JSON.stringify(article, null, 2));
+    return {
+        _id: article._id,
+        url: url,
+        file: `${path}/${article._id}.json`
+    };
 }
 
 export async function Extract(startDate, endDate) {

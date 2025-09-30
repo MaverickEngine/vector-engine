@@ -72,6 +72,10 @@ export async function clean_article(_id, force = false) {
     const article = clean_article_map(previous_article);
     await mkdirp(path);
     await fs.writeFile(`${path}/${_id}.json`, JSON.stringify(article, null, 2));
+    return {
+        _id: article._id,
+        file: `${path}/${_id}.json`
+    }
 }
 
 export async function Clean() {

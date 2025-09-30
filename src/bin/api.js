@@ -215,7 +215,7 @@ app.post("/vectorize", async (req, res) => {
     if (post_id && revengine_id) {
         res.status(400).send("post_id and revengine_id are mutually exclusive");
     }
-    let article_id;
+    let article_id = revengine_id;
     if (post_id) {
         const article = await find_article_by_post_id(post_id, ["_id"]);
         article_id = article._id;

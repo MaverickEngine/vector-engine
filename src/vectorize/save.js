@@ -84,7 +84,12 @@ export async function save_article(_id) {
             response
         });
     }
-    return result;
+    return {
+        _id: article._id,
+        file: `${previous_path}/${_id}.json`,
+        result: result,
+        status: article.status
+    };
 }
 
 // Save()

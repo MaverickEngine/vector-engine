@@ -5,10 +5,16 @@ import { embed_article } from "../vectorize/embeddings.js";
 import { save_article } from "../vectorize/save.js";
 
 export async function vectorize_one(article) {
-    await extract_article(article, true);
-    await clean_article(article._id, true);
-    await chunk_article(article._id, true);
-    await embed_article(article._id, true);
-    const result = await save_article(article._id, true);
-    return result;
+    const extracted_result = await extract_article(article, true);
+    const cleaned_result = await clean_article(article._id, true);
+    const chunked_result = await chunk_article(article._id, true);
+    const embedded_result = await embed_article(article._id, true);
+    const saved_result = await save_article(article._id, true);
+    return {
+        extracted_result,
+        cleaned_result,
+        chunked_result,
+        embedded_result,
+        saved_result
+    };
 }

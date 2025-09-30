@@ -111,7 +111,11 @@ export async function chunk_article(_id, force = false) {
     article.chunks = chunk(article);
     await mkdirp(path);
     await fs.writeFile(`${path}/${_id}.json`, JSON.stringify(article, null, 2));
-    return article;
+    return {
+        _id: article._id,
+        file: `${path}/${_id}.json`,
+        chunk_count: article.chunks.length
+    };
 }
 
 // Chunk()

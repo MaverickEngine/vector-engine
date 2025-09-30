@@ -92,6 +92,10 @@ export async function embed_article(_id, force = false) {
     article.chunks = await embedding(article);
     await mkdirp(path);
     await fs.writeFile(`${path}/${_id}.json`, JSON.stringify(article, null, 2));
+    return {
+        _id: article._id,
+        file: `${path}/${_id}.json`,
+    };
 }
 
 // Embeddings()
