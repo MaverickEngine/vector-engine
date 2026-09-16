@@ -21,7 +21,7 @@ const concurrency = 20;
 
 async function embedding(article) {
     const chunks = article.chunks;
-    for (let chunk of chunks) {
+    for (const [index, chunk] of chunks.entries()) {
         try {
             const response = await ollama.embeddings({
                 prompt: chunk.content,
@@ -29,8 +29,11 @@ async function embedding(article) {
             })
             chunk.embedding = response.embedding;
         } catch (error) {
-            console.log(`Error parsing response: ${error}`);
-            return null;
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error(
+                `Error generating embedding for article ${article._id}, chunk ${index + 1}/${chunks.length}: ${message}`,
+                { cause: error },
+            );
         }
     }
     return chunks;

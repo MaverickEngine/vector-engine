@@ -7,79 +7,59 @@ import { existsSync } from "fs";
 // Constants
 const path = "articles/2-chunked";
 const previous_path = "articles/1-cleaned";
-const max_chunk_size = 2000;
+export const MAX_CHUNK_CHARACTERS = 1000;
+const METADATA_CHARACTER_BUDGET = 250;
 
-function chunkText(content, max_words) {
-    function wordCount(text) {
-        return text.split(/\s+/).filter(word => word.length > 0).length;
-    }
+function truncateText(text, maxCharacters) {
+    if (text.length <= maxCharacters) return text;
+    return `${text.slice(0, maxCharacters - 1).trimEnd()}…`;
+}
 
-    function chunkParagraph(paragraph, max_words) {
-        let sentences = paragraph.split(/(?<=\.)\s+/);
-        let chunks = [];
-        let currentChunk = [];
+export function chunkText(content, maxCharacters) {
+    const segments = content
+        .trim()
+        .split(/(?<=[.!?])\s+|\n+/)
+        .flatMap(segment => {
+            const parts = [];
+            let remaining = segment.trim();
 
-        sentences.forEach(sentence => {
-            let currentWords = wordCount(currentChunk.join(' '));
-            let sentenceWords = wordCount(sentence);
-
-            if (currentWords + sentenceWords > max_words) {
-                chunks.push(currentChunk.join(' '));
-                currentChunk = [sentence]; // Start a new chunk with the current sentence
-            } else {
-                currentChunk.push(sentence);
+            while (remaining.length > maxCharacters) {
+                const breakAt = remaining.lastIndexOf(" ", maxCharacters);
+                const splitAt = breakAt > 0 ? breakAt : maxCharacters;
+                parts.push(remaining.slice(0, splitAt).trim());
+                remaining = remaining.slice(splitAt).trim();
             }
+
+            if (remaining) parts.push(remaining);
+            return parts;
         });
-        if (currentChunk.length > 0) {
-            chunks.push(currentChunk.join(' '));
-        }
-        return chunks;
-    }
 
-    let paragraphs = content.split(/\n+/);
-    let chunks = [];
-    let currentChunk = [];
-
-    paragraphs.forEach(paragraph => {
-        let currentWords = wordCount(currentChunk.join(' '));
-        let paragraphWords = wordCount(paragraph);
-
-        if (paragraphWords > max_words) {
-            if (currentChunk.length > 0) {
-                chunks.push(currentChunk.join('\n'));
-                currentChunk = [];
-            }
-            // Break paragraph into sentences and process
-            chunks = chunks.concat(chunkParagraph(paragraph, max_words));
+    const chunks = [];
+    let currentChunk = "";
+    for (const segment of segments) {
+        if (!currentChunk) {
+            currentChunk = segment;
+        } else if (currentChunk.length + 1 + segment.length <= maxCharacters) {
+            currentChunk += `\n${segment}`;
         } else {
-            if (currentWords + paragraphWords > max_words) {
-                chunks.push(currentChunk.join('\n'));
-                currentChunk = [paragraph]; // Start a new chunk with the current paragraph
-            } else {
-                currentChunk.push(paragraph);
-            }
+            chunks.push(currentChunk);
+            currentChunk = segment;
         }
-    });
-
-    if (currentChunk.length > 0) {
-        chunks.push(currentChunk.join('\n'));
     }
-
+    if (currentChunk) chunks.push(currentChunk);
     return chunks;
 }
 
-function chunk(article) {
-    const header = `URL: ${article.url}\nTitle: ${article.title}\nAuthor: ${article.author}\npost_id: ${article.post_id}\nDate: ${article.date_published}\nTags: ${article.tags.join(", ")}\nSections: ${article.sections.join(", ")}\n\n<!--starts-->\n\n`;
+export function chunk(article) {
+    const fullHeader = `URL: ${article.url}\nTitle: ${article.title}\nAuthor: ${article.author}\npost_id: ${article.post_id}\nDate: ${article.date_published}\nTags: ${(article.tags || []).join(", ")}\nSections: ${(article.sections || []).join(", ")}\n\n<!--starts-->\n\n`;
+    const header = truncateText(fullHeader, METADATA_CHARACTER_BUDGET);
     const footer = `<!--ends-->\n\n`;
     const body = `${article.excerpt}\n\n${article.content}`;
-    if (body.length < max_chunk_size) {
-        return [{
-            content: header + body + footer,
-        }];
-    }
-    const chunks = chunkText(body, max_chunk_size);
-    return chunks.map(chunk => ({
-        content: header + chunk + footer,
+    const bodyCharacterBudget = MAX_CHUNK_CHARACTERS - header.length - footer.length;
+    const chunks = chunkText(body, bodyCharacterBudget);
+
+    return chunks.map(content => ({
+        content: `${header}${content}${footer}`,
     }));
 }
 
