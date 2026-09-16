@@ -4,6 +4,13 @@ import { init as recommend_init, similar, qdrant_search } from "../libs/recommen
 import { get, set, clear_keys } from "../libs/cache.js";
 import JXPHelper from "jxp-helper";
 import { vectorize_one } from "../libs/vectorize_one.js";
+import {
+    createStartupContext,
+    formatListenUrl,
+    printBanner,
+    printBooting,
+    printReady,
+} from "../libs/startup.js";
 import { config } from "dotenv";
 config();
 
@@ -23,6 +30,7 @@ app.register(fastifyCors, {
 
 const port = process.env.PORT || 8001;
 const host = process.env.HOST || "0.0.0.0";
+const isTest = process.env.NODE_ENV === "test";
 
 const KEY_PREFIX = "qdrant-cache";
 
@@ -278,17 +286,28 @@ export async function init() {
 }
 
 async function main() {
-    await init();
-    console.log("Server initialized");
-    if (process.env.NODE_ENV !== "test") {
-        await app.listen({ port, host });
-        console.log(`Server listening on http://${host}:${port}`);
+    if (isTest) {
+        await init();
+        return;
     }
+
+    const startupCtx = createStartupContext();
+    printBanner(startupCtx);
+    printBooting(startupCtx);
+
+    await init();
+    await app.listen({ port, host });
+
+    printReady({
+        ...startupCtx,
+        url: formatListenUrl(host, port),
+        startedAt: new Date(),
+    });
 }
 
 export async function close() {
     // await recommend_close();
-    if (process.env.NODE_ENV !== "test") {
+    if (!isTest) {
         await app.close();
     }
 }

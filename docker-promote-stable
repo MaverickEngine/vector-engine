@@ -1,0 +1,91 @@
+#!/bin/bash
+# Promote an existing Harbor image tag to :stable (no rebuild).
+#
+# Usage:
+#   ./docker-promote-stable                         # interactive menu
+#   ./docker-promote-stable vector-engine           # promote :latest -> :stable
+#   ./docker-promote-stable ollama 1.5.0            # promote a version tag
+#   ./docker-promote-stable all                     # promote both images
+#
+set -euo pipefail
+
+cd "$(dirname "$0")"
+
+registry="harbor.revengine.dailymaverick.co.za/revengine"
+component_arg=""
+source_tag="latest"
+
+for arg in "$@"; do
+	case "$arg" in
+	vector-engine|ollama|all)
+		component_arg="$arg"
+		;;
+	*)
+		if [[ -z "$component_arg" ]]; then
+			component_arg="$arg"
+		else
+			source_tag="$arg"
+		fi
+		;;
+	esac
+done
+
+promote_component() {
+	local component="$1"
+	local remote_image="${registry}/${component}"
+
+	echo "Promoting ${remote_image}:${source_tag} -> ${remote_image}:stable"
+	docker pull "${remote_image}:${source_tag}"
+	docker tag "${remote_image}:${source_tag}" "${remote_image}:stable"
+	docker push "${remote_image}:stable"
+	echo "Done. ${remote_image}:stable now matches :${source_tag}"
+}
+
+resolve_and_promote() {
+	local choice="$1"
+	case "${choice}" in
+	vector-engine|1)
+		promote_component "vector-engine"
+		;;
+	ollama|2)
+		promote_component "vector-engine-ollama"
+		;;
+	all|a|A)
+		promote_component "vector-engine"
+		promote_component "vector-engine-ollama"
+		;;
+	*)
+		echo "Unknown component: ${choice}" >&2
+		echo "Expected: vector-engine | ollama | all" >&2
+		exit 1
+		;;
+	esac
+}
+
+if [[ -n "${component_arg}" ]]; then
+	resolve_and_promote "${component_arg}"
+	exit 0
+fi
+
+while true; do
+	echo
+	echo "=== Vector Engine promote-stable menu ==="
+	echo "  1) Promote vector-engine"
+	echo "  2) Promote vector-engine-ollama"
+	echo "  a) Promote all"
+	echo "  q) Quit"
+	read -rp "Enter choice [1/2/a/q]: " choice
+
+	case "${choice}" in
+	1|2|a|A)
+		resolve_and_promote "${choice}"
+		;;
+	q|Q)
+		echo "Exiting."
+		exit 0
+		;;
+	*)
+		echo "Invalid choice. Please enter 1, 2, a, or q."
+		;;
+	esac
+done

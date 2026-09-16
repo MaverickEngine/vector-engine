@@ -1,0 +1,134 @@
+#!/bin/bash
+# Build and push versioned images to Harbor.
+#
+# Usage:
+#   ./docker-build                         # interactive menu
+#   ./docker-build vector-engine           # app image only
+#   ./docker-build ollama                  # ollama image only
+#   ./docker-build all                     # both images
+#   ./docker-build vector-engine 1.5.1     # override version tag
+#   ./docker-build ollama --no-latest      # push only the version tag
+#
+# To promote :latest (or a version tag) to :stable without rebuilding:
+#   ./docker-promote-stable
+#   npm run docker:stable
+#
+set -euo pipefail
+
+cd "$(dirname "$0")"
+
+registry="harbor.revengine.dailymaverick.co.za/revengine"
+push_latest=1
+version=""
+component_arg=""
+
+for arg in "$@"; do
+	case "$arg" in
+	--no-latest) push_latest=0 ;;
+	-*) echo "Unknown option: $arg" >&2; exit 1 ;;
+	vector-engine|ollama|all)
+		if [[ -n "$component_arg" && -z "$version" ]]; then
+			version="$arg"
+		else
+			component_arg="$arg"
+		fi
+		;;
+	*)
+		if [[ -z "$component_arg" ]]; then
+			component_arg="$arg"
+		else
+			version="$arg"
+		fi
+		;;
+	esac
+done
+
+if [[ -z "$version" ]]; then
+	version="$(node -p "require('./package.json').version")"
+fi
+
+git_sha=""
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+	git_sha="$(git rev-parse --short HEAD)"
+fi
+
+tags=("${version}")
+if [[ -n "$git_sha" ]]; then
+	tags+=("${version}-${git_sha}")
+fi
+if [[ "$push_latest" -eq 1 ]]; then
+	tags+=("latest")
+fi
+
+build_component() {
+	local component="$1"
+	local dockerfile="$2"
+	local context="$3"
+	local local_image="${component}:${version}"
+	local remote_image="${registry}/${component}"
+
+	echo "Building ${component} (version ${version}${git_sha:+, commit ${git_sha}})"
+	echo "Using Dockerfile: ${dockerfile} (context: ${context})"
+	docker build -t "${local_image}" -f "${dockerfile}" "${context}"
+
+	for tag in "${tags[@]}"; do
+		echo "Tagging ${remote_image}:${tag}"
+		docker tag "${local_image}" "${remote_image}:${tag}"
+	done
+
+	for tag in "${tags[@]}"; do
+		echo "Pushing ${remote_image}:${tag}"
+		docker push "${remote_image}:${tag}"
+	done
+
+	echo "Done. Pushed ${component} tags: ${tags[*]}"
+}
+
+resolve_and_build() {
+	local choice="$1"
+	case "${choice}" in
+	vector-engine|1)
+		build_component "vector-engine" "Dockerfile" "."
+		;;
+	ollama|2)
+		build_component "vector-engine-ollama" "ollama/Dockerfile" "./ollama"
+		;;
+	all|a|A)
+		build_component "vector-engine" "Dockerfile" "."
+		build_component "vector-engine-ollama" "ollama/Dockerfile" "./ollama"
+		;;
+	*)
+		echo "Unknown component: ${choice}" >&2
+		echo "Expected: vector-engine | ollama | all" >&2
+		exit 1
+		;;
+	esac
+}
+
+if [[ -n "${component_arg}" ]]; then
+	resolve_and_build "${component_arg}"
+	exit 0
+fi
+
+while true; do
+	echo
+	echo "=== Vector Engine Docker build menu ==="
+	echo "  1) Build vector-engine"
+	echo "  2) Build vector-engine-ollama"
+	echo "  a) Build all"
+	echo "  q) Quit"
+	read -rp "Enter choice [1/2/a/q]: " choice
+
+	case "${choice}" in
+	1|2|a|A)
+		resolve_and_build "${choice}"
+		;;
+	q|Q)
+		echo "Exiting."
+		exit 0
+		;;
+	*)
+		echo "Invalid choice. Please enter 1, 2, a, or q."
+		;;
+	esac
+done

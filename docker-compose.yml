@@ -64,6 +64,7 @@ services:
       mode: global
 
   ollama:
+    image: harbor.revengine.dailymaverick.co.za/revengine/vector-engine-ollama:latest
     build:
       context: ./ollama
       dockerfile: Dockerfile
