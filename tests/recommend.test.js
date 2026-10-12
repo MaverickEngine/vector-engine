@@ -74,11 +74,22 @@ describe("Similarity", function () {
         expect(result.length).toEqual(5);
         const post_ids = result.map(item => item.payload.post_id);
         expect(post_ids).not.toContain(post_id);
+        // One hit per article — chunk duplicates must not eat the limit.
+        expect(new Set(post_ids).size).toEqual(post_ids.length);
         const scores = result.map(item => item.score);
         // Expect scores to decrease in size
         expect(scores[0]).toBeGreaterThan(scores[1]);
         expect(scores[1]).toBeGreaterThan(scores[2]);
         expect(scores[2]).toBeGreaterThan(scores[3]);
         expect(scores[3]).toBeGreaterThan(scores[4]);
+    });
+
+    it("should return distinct articles up to the requested limit", async function () {
+        const post_id = "5f17feace6eba93d8137f9bd";
+        const limit = 12;
+        const result = await similar(post_id, { limit, previous_days: -1 });
+        expect(result.length).toEqual(limit);
+        const post_ids = result.map((item) => item.payload.post_id);
+        expect(new Set(post_ids).size).toEqual(limit);
     });
 });

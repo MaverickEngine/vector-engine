@@ -129,7 +129,7 @@ async function find_article_by_revengine_id(revengine_id, fields = ["_id"]) {
 app.get("/similar/:id", async (req, res) => {
     const limit = req.query.limit || 5;
     const previous_days = req.query.previous_days || 30;
-    const key = `${KEY_PREFIX}-similar-${req.params.id}-${limit}-${previous_days}`;
+    const key = `${KEY_PREFIX}-similar-v2-${req.params.id}-${limit}-${previous_days}`;
     const cached = await get(key);
     // let cached = false;
     if (cached) {
@@ -200,7 +200,12 @@ app.post("/similar", async (req, res) => {
     if (!post_id && !revengine_id) {
         res.status(400).send("post_id or revengine_id is required");
     }
-    const key = `${KEY_PREFIX}-similar_post-${post_id}-${limit}-${previous_days}`;
+    // History is per-reader; include a stable hash so one user's history isn't served to another.
+    const historyKey = history.length
+        ? hashQuery([...history].map(String).sort().join(","))
+        : "none";
+    // Bust pre-groups-fix caches that stored under-filled chunk-duplicate results.
+    const key = `${KEY_PREFIX}-similar_post-v2-${post_id}-${limit}-${previous_days}-${historyKey}`;
     const cached = await get(key);
     // let cached = false;
     if (cached) {

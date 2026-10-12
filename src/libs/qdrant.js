@@ -201,25 +201,29 @@ export class Qdrant {
         if (!point) {
             return [];
         }
+        // Preserve any caller must_not (e.g. reading history) and always exclude the source article.
         filter.must_not = [
+            ...(filter.must_not || []),
             {
-                "key": "post_id", "match": { "value": point.payload.post_id }
-            }
-        ]
+                key: "post_id",
+                match: { value: point.payload.post_id },
+            },
+        ];
+        // Use /search/groups — group_by is ignored on /points/search, which returns
+        // duplicate chunks of the same article and under-fills the requested limit.
         const search = {
             vector: point.vector,
-            "params": {
-                "hnsw_ef": 128,
-                "exact": false
+            params: {
+                hnsw_ef: 128,
+                exact: false,
             },
             limit,
-            "with_payload": true,
+            with_payload: true,
             filter,
-            "group_by": "post_id",
-            "group_size": 1,
-        }
-        // console.log(JSON.stringify(search));
-        const response = await fetch(`${this.url}/collections/${collection}/points/search`, {
+            group_by: "post_id",
+            group_size: 1,
+        };
+        const response = await fetch(`${this.url}/collections/${collection}/points/search/groups`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -230,6 +234,6 @@ export class Qdrant {
         if (result.status !== "ok") {
             throw new Error(result.statusText || "Unknown error");
         }
-        return result.result.sort((a, b) => b.score - a.score);
+        return flattenGroups(result.result.groups);
     }
 }

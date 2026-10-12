@@ -83,10 +83,22 @@ export async function qdrant_search(content, limit, { previous_days = 30, sectio
     return result;
 }
 
+const MAX_LIMIT = 50;
+
+function clampLimit(limit) {
+    const n = parseInt(limit, 10);
+    if (!Number.isFinite(n) || n < 1) return 5;
+    return Math.min(n, MAX_LIMIT);
+}
+
+/** Normalize Wordpress post ids so Qdrant/JXP comparisons stay consistent. */
+function toPostId(value) {
+    const n = Number(value);
+    return Number.isInteger(n) ? n : value;
+}
+
 export async function search(content, { limit = 5, previous_days = 30, section = "all", tag = "all", author = "all" }) {
-    if (limit > 10) {
-        limit = 10;
-    }
+    limit = clampLimit(limit);
     return await qdrant_search(content, limit, {
         previous_days,
         section,
@@ -96,9 +108,7 @@ export async function search(content, { limit = 5, previous_days = 30, section =
 }
 
 export async function similar(_id, { limit = 5, history = [], previous_days = 30 }) {
-    if (limit > 10) {
-        limit = 10;
-    }
+    limit = clampLimit(limit);
     const start_date = new Date();
     start_date.setDate(start_date.getDate() - previous_days);
     const filter = {
@@ -107,7 +117,8 @@ export async function similar(_id, { limit = 5, history = [], previous_days = 30
                 "key": "status",
                 "match": { "value": "publish" }
             }
-        ]
+        ],
+        must_not: [],
     };
     if (previous_days > 0) {
         filter.must.push({
@@ -118,9 +129,16 @@ export async function similar(_id, { limit = 5, history = [], previous_days = 30
             }
         });
     }
+    // Exclude articles the reader has already seen (documented on POST /similar).
+    for (const post_id of history) {
+        filter.must_not.push({
+            key: "post_id",
+            match: { value: toPostId(post_id) },
+        });
+    }
     const id = uuidv5(`${_id}_0`, uuidv5.URL);
     const result = await qdrant.similarById(COLLECTION, id, limit, filter).catch(err => {
-        console.log("Error finding similar articles", { _id, limit, history, previous_days });
+        console.log("Error finding similar articles", { _id, limit, history, previous_days }, err);
         return [];
     });
     return result;
