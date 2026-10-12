@@ -1,6 +1,6 @@
 {
   "name": "vector-engine",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "main": "clean.js",
   "dependencies": {
     "@fastify/cors": "^11.3.0",

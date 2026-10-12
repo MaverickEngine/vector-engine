@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.1] - 2026-10-12
+
+### Fixed
+- Similar recommendations under-returning articles because `group_by` was sent to `/points/search` (ignored); now uses `/points/search/groups` like search
+- `history` on POST `/similar` was accepted but never applied; excluded articles are now filtered in Qdrant
+- Similar/search limit hard-cap raised from 10 to 50 so clients can request more than 10 results
+
+### Changed
+- Similar cache keys include a history hash and a `v2` prefix to avoid serving pre-fix under-filled results
+
 ## [1.6.0] - 2026-10-12
 
 ### Added
