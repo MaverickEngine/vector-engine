@@ -1,7 +1,9 @@
 import IORedis from 'ioredis'
 
+const DEFAULT_TTL = parseInt(process.env.CACHE_TTL || String(60 * 60), 10);
+
 // Create Redis client
-const redis = new IORedis({
+export const redis = new IORedis({
     host: process.env.REDIS_HOST || 'localhost',
     port: process.env.REDIS_PORT || 6379,
     password: process.env.REDIS_PASSWORD || '',
@@ -13,7 +15,7 @@ export function closeRedisConnection() {
     return redis.quit();
 }
 
-export function set(key, val, ttl = 60 * 60) {
+export function set(key, val, ttl = DEFAULT_TTL) {
     let json_val = JSON.stringify(val);
     return redis.set(key, json_val, 'EX', ttl);
 }

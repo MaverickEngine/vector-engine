@@ -49,6 +49,11 @@ The article vectorization process is as follows:
 - `REDIS_PASSWORD` - The password for the Redis server, defaults to no password
 - `HOST` - The host of the server, defaults to `127.0.0.1`
 - `PORT` - The port of the server, defaults to `8001`
+- `CACHE_TTL` - Redis cache TTL in seconds for API responses, defaults to `3600` (1 hour)
+- `MAX_SEARCH_WORDS` - Maximum words allowed in a `/search` query, defaults to `100`
+- `MAX_SEARCH_CHARS` - Maximum characters allowed in a `/search` query, defaults to `800`
+- `RATE_LIMIT_MAX` - Max requests per IP within the rate-limit window, defaults to `30`
+- `RATE_LIMIT_TIME_WINDOW` - Rate-limit window, defaults to `1 minute`
 
 5. Start the server with `npm start`
 
@@ -124,6 +129,8 @@ Body:
 
 ### POST /search
 
+Vectorizes the provided text and returns the most similar articles. Results are cached in Redis (1 hour by default). Queries are limited to 100 words and 800 characters by default (see env vars above).
+
 The body of the request should be a JSON object with the following properties:
 ```json
 {
@@ -138,11 +145,11 @@ The body of the request should be a JSON object with the following properties:
 }
 ```
 
-The endpoint will return the 5 most similar articles to the provided search query.
+The endpoint will return the 5 most similar articles to the provided search query. Oversized queries return `400`.
 
 ### GET /search/:query
 
-Works the same as the POST /search endpoint, but the query parameters are passed in the URL.
+Works the same as the POST /search endpoint, but the query parameters are passed in the URL. The same word/character limits and caching apply.
 
 Eg. `/search/who%20won%20the%20trump%20harris%20debate?limit=10&section=South%20Africa`
 
@@ -177,7 +184,11 @@ This endpoint will clear the Redis cache.
 
 ## Caching
 
-Caching is set for 24 hours. Response time for the `/similar/:id` endpoint can be as high as ~200ms for an uncached request, but should drop to ~10ms for a cached request.
+Caching is set for 1 hour by default (`CACHE_TTL`). `/similar` and `/search` responses are cached in Redis. Response time for the `/similar/:id` endpoint can be as high as ~200ms for an uncached request, but should drop to ~10ms for a cached request.
+
+## Rate limiting
+
+All API routes are rate-limited per IP (30 requests per minute by default), backed by Redis. Exceeding the limit returns `429 Too Many Requests` with a `Retry-After` header.
 
 ## License
 

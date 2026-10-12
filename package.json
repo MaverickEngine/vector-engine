@@ -4,6 +4,7 @@
   "main": "clean.js",
   "dependencies": {
     "@fastify/cors": "^11.3.0",
+    "@fastify/rate-limit": "^11.2.1",
     "@fastify/redis": "^7.2.0",
     "bson": "^6.10.4",
     "cli-progress": "^3.12.0",
