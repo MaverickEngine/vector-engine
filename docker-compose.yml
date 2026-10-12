@@ -17,6 +17,11 @@ services:
       - QDRANT_URL=http://qdrant:6333
       - REDIS_HOST=redis
       - OLLAMA_URL=http://ollama:11434
+      - JXP_SERVER=http://host.docker.internal:4001
+      - MONGO_URI=mongodb://host.docker.internal:27018
+      - MONGO_DB_NAME=revengine-dev
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./articles:/app/articles
       - ./src:/app/src
