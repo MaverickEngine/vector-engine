@@ -24,7 +24,9 @@ const MAX_SEARCH_WORDS = parseInt(process.env.MAX_SEARCH_WORDS || "100", 10);
 const MAX_SEARCH_CHARS = parseInt(process.env.MAX_SEARCH_CHARS || "800", 10);
 const RATE_LIMIT_TIME_WINDOW = process.env.RATE_LIMIT_TIME_WINDOW || "1 minute";
 
-export const app = fastify();
+// trustProxy so rate-limit (and req.ip) use the client IP from X-Forwarded-For
+// when we sit behind a reverse proxy, instead of the proxy's address.
+export const app = fastify({ trustProxy: true });
 
 const port = process.env.PORT || 8001;
 const host = process.env.HOST || "0.0.0.0";
