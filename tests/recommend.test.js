@@ -1,4 +1,20 @@
 import { search, similar, init, close } from "../src/libs/recommend.js";
+import { flattenGroups } from "../src/libs/qdrant.js";
+
+describe("flattenGroups", function () {
+    it("returns one hit per group sorted by score descending", function () {
+        const groups = [
+            { id: 200, hits: [{ id: "b1", score: 0.7, payload: { post_id: 200 } }] },
+            { id: 100, hits: [{ id: "a1", score: 0.9, payload: { post_id: 100 } }] },
+            { id: 300, hits: [{ id: "c1", score: 0.5, payload: { post_id: 300 } }] },
+        ];
+        expect(flattenGroups(groups).map((r) => r.id)).toEqual(["a1", "b1", "c1"]);
+    });
+
+    it("handles no groups", function () {
+        expect(flattenGroups()).toEqual([]);
+    });
+});
 
 describe("Search", function () {
     beforeAll(async function () {
@@ -25,6 +41,8 @@ describe("Search", function () {
         expect(item.payload.post_id).toBeDefined();
         expect(item.payload.date_published).toBeDefined();
         expect(item.payload.content).toBeDefined();
+        const postIds = result.map((r) => r.payload.post_id);
+        expect(new Set(postIds).size).toEqual(postIds.length);
     });
 
     it("should limit results by section", async function () {

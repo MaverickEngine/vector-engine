@@ -55,10 +55,13 @@ export async function qdrant_search(content, limit, { previous_days = 30, sectio
         });
     }
 
-    const result = await qdrant.search(COLLECTION, {
+    // Articles are stored as multiple chunk vectors sharing a post_id. Group by
+    // post_id so we get `limit * 10` distinct articles (best chunk each) to rerank.
+    const result = await qdrant.searchGroups(COLLECTION, {
         filter,
         top: limit * 10,
-        vectors: embeddings.embedding
+        vectors: embeddings.embedding,
+        group_by: "post_id"
     });
 
     // Rerank with most recent articles first
@@ -71,7 +74,7 @@ export async function qdrant_search(content, limit, { previous_days = 30, sectio
     const date_range = max_date - min_date;
     result.forEach((r, i) => {
         const val = new Date(r.payload.date_published).getTime();
-        r.normalized_date = (val - min_date) / (max_date - min_date);
+        r.normalized_date = date_range === 0 ? 1 : (val - min_date) / date_range;
         r.score = (r.score * 0.7) + (r.normalized_date * 0.3);
     });
 

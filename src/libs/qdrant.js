@@ -1,6 +1,13 @@
 const url = process.env.QDRANT_URL || 'http://127.0.0.1:6333';
 const distance = process.env.MODEL_DISTANCE || 'Cosine';
 
+/** Flatten Qdrant group results into a score-sorted list of hits. */
+export function flattenGroups(groups = []) {
+    return groups
+        .flatMap((group) => group.hits)
+        .sort((a, b) => b.score - a.score);
+}
+
 export class Qdrant {
     url;
 
@@ -113,6 +120,38 @@ export class Qdrant {
             throw new Error(result.statusText || "Unknown error");
         }
         return result.result.sort((a, b) => b.score - a.score);
+    }
+
+    /**
+     * Search returning at most one hit (the best-scoring chunk) per `group_by` value.
+     * `query.top` is the number of distinct groups (articles), not chunks, so the
+     * result count is not reduced by articles that have many matching chunks.
+     */
+    async searchGroups(collection, query) {
+        const search = {
+            filter: query.filter || {},
+            params: {
+                hnsw_ef: 128,
+                exact: false
+            },
+            limit: query.top,
+            vector: query.vectors,
+            with_payload: true,
+            group_by: query.group_by || "post_id",
+            group_size: 1,
+        };
+        const response = await fetch(`${this.url}/collections/${collection}/points/search/groups`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(search)
+        });
+        const result = await response.json();
+        if (result.status !== "ok") {
+            throw new Error(result.statusText || "Unknown error");
+        }
+        return flattenGroups(result.result.groups);
     }
 
     async deleteRecord(collection, post_id) {
