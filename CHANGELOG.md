@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.3] - 2026-10-12
+
+### Changed
+- Upgraded runtime and test dependencies (Jest 30, MongoDB 7, dotenv 18, glob 13, he 2, ioredis 6, uuid 14, commander 15, ollama 0.6, Babel 8, and related packages)
+- Docker test service installs from the mounted lockfile; Dockerfile uses `npm ci`
+- Quiet dotenv startup logging; `he` import updated for ESM named exports
+
+### Fixed
+- Mock JXP API routes and payloads aligned with `jxp-helper` so API tests exercise `/similar` and `/vectorize` correctly
+- Vectorize API tests assert the current response shape from `vectorize_one`
+
 ## [1.6.2] - 2026-10-12
 
 ### Fixed

@@ -42,8 +42,9 @@ describe("API", function () {
         expect(response.statusCode).toEqual(200);
         const result = response.json();
         expect(result).toBeDefined();
-        expect(result.length).toBe(1);
-        expect(result[0].id).toBeDefined();
+        expect(result.saved_result).toBeDefined();
+        expect(result.saved_result._id).toBeDefined();
+        expect(result.saved_result.result[0].id).toBeDefined();
     })
 
     it("should vectorize an article from a RevEngine id", async function () {
@@ -57,8 +58,9 @@ describe("API", function () {
         expect(response.statusCode).toEqual(200);
         const result = response.json();
         expect(result).toBeDefined();
-        expect(result.length).toBe(1);
-        expect(result[0].id).toBeDefined();
+        expect(result.saved_result).toBeDefined();
+        expect(result.saved_result._id).toEqual("669fa28fda704571f8b9b66d");
+        expect(result.saved_result.result[0].id).toBeDefined();
     })
 
     it("should reject search queries that exceed word or character limits", async function () {

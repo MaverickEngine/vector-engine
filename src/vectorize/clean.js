@@ -1,5 +1,5 @@
 import fs from "fs/promises";
-import he from "he";
+import { decode as heDecode } from "he";
 import { mkdirp } from "mkdirp";
 import { glob } from "glob";
 import { default as cliProgress } from "cli-progress";
@@ -29,7 +29,7 @@ function cleanContent(content) {
     // Remove Wordpress shortcodes
     content = content.replace(/\[.*?\]/g, '');
     // Remove HTML entities
-    content = he.decode(content);
+    content = heDecode(content);
     // Remove all leading and trailing whitespace
     content = content.trim();
     // Remove all double spaces

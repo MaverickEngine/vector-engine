@@ -5,7 +5,7 @@ import { default as cliProgress } from "cli-progress";
 import { existsSync } from "fs";
 import { config } from "dotenv";
 import moment from "moment-timezone";
-config();
+config({ quiet: true });
 
 // Constants
 const url = process.env.MONGO_URI || "mongodb://localhost:27017";

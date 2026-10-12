@@ -44,7 +44,7 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - OLLAMA_URL=http://ollama:11434
-      - JXP_API_URL=http://mock-api:3000
+      - JXP_SERVER=http://mock-api:3000
       - JXP_API_KEY=test_key
       - NODE_ENV=test
       - MONGODB_URI=mongodb://mongodb:27017/vectorizer
@@ -52,7 +52,11 @@ services:
       - ./articles:/app/articles
       - ./src:/app/src
       - ./tests:/app/tests
-    command: npm test
+      - ./package.json:/app/package.json
+      - ./package-lock.json:/app/package-lock.json
+      - ./babel.config.cjs:/app/babel.config.cjs
+      - ./jest.config.mjs:/app/jest.config.mjs
+    command: sh -c "npm install && npm test"
 
   qdrant:
     image: qdrant/qdrant:latest

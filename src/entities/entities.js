@@ -4,7 +4,7 @@ import { mkdirp } from "mkdirp";
 import { glob } from "glob";
 import { Ollama } from "ollama";
 import { config } from "dotenv";
-config();
+config({ quiet: true });
 
 const ollama = new Ollama({
     host: process.env.OLLAMA_URL || "http://localhost:11434",

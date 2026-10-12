@@ -14,7 +14,7 @@ import {
     printReady,
 } from "../libs/startup.js";
 import { config } from "dotenv";
-config();
+config({ quiet: true });
 
 const JXP_SERVER = process.env.JXP_SERVER || "http://localhost:8080";
 const JXP_API_KEY = process.env.JXP_API_KEY || "1234";

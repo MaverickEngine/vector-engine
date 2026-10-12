@@ -2,7 +2,7 @@ import { Qdrant } from "./qdrant.js";
 import { Ollama } from "ollama";
 import { v5 as uuidv5 } from 'uuid';
 import { config } from "dotenv";
-config();
+config({ quiet: true });
 
 const ollama = new Ollama({
     host: process.env.OLLAMA_URL || "http://localhost:11434",

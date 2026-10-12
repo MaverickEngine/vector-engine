@@ -5,7 +5,7 @@ import { Ollama } from "ollama";
 import { default as cliProgress } from "cli-progress";
 import { existsSync } from "fs";
 import { config } from "dotenv";
-config();
+config({ quiet: true });
 
 const ollama = new Ollama({
     host: process.env.OLLAMA_URL || "http://localhost:11434",
