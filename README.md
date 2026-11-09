@@ -25,7 +25,7 @@ The article vectorization process is as follows:
 1. The article is extracted from the RevEngine API.
 2. The article is cleaned. We remove HTML tags, scripts and Wordpress shortcodes. We also normalize paragraph breaks. 
 2. The article is chunked if necessary. We prefer full articles, but if the article is too long, we will split it into chunks. We add a header to the start of each chunk so that they relate to one another.
-3. Each chunk is vectorized using the all-minilm model.
+3. Each chunk is vectorized using the `mxbai-embed-large:latest` model by default. Set the `MODEL` environment variable to use a different Ollama model.
 4. The vectors are stored with metadata in a Qdrant database.
 
 ## Requirements
