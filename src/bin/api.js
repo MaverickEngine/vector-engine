@@ -6,6 +6,7 @@ import { init as recommend_init, similar, qdrant_search } from "../libs/recommen
 import { get, set, clear_keys, redis } from "../libs/cache.js";
 import JXPHelper from "jxp-helper";
 import { vectorize_one } from "../libs/vectorize_one.js";
+import { createVectorizeGuard } from "../libs/vectorize_guard.js";
 import {
     createStartupContext,
     formatListenUrl,
@@ -201,6 +202,7 @@ app.post("/similar", async (req, res) => {
     let _id = req.body.revengine_id;
     if (!post_id && !revengine_id) {
         res.status(400).send("post_id or revengine_id is required");
+        return;
     }
     // History is per-reader; include a stable hash so one user's history isn't served to another.
     const historyKey = history.length
@@ -228,20 +230,22 @@ app.post("/similar", async (req, res) => {
     } else {
         article = await find_article_by_revengine_id(_id);
     }
-    const result = await similar(_id, { limit: parseInt(limit), history, previous_days: parseInt(previous_days) }).catch(async err => {
+    let result;
+    try {
+        result = await similar(_id, { limit: parseInt(limit), history, previous_days: parseInt(previous_days) });
+    } catch (err) {
         console.error(err);
+        if (article) vectorize_guard.request(article._id);
         res.status(500).send(err);
-        if (article) {
-            await vectorize_article(article._id);
-        }
-        return [];
-    });
+        return;
+    }
     if (result.length === 0) {
-        console.log("No similar articles found for ", _id);
-        res.send([]);
-        if (article) {
-            await vectorize_article(article._id);
+        // Usually a new article that isn't in Qdrant yet. Vectorize it in the
+        // background, at most once per lock period, rather than on every request.
+        if (article && await vectorize_guard.request(article._id)) {
+            console.log("No similar articles found, queued vectorize for", _id);
         }
+        res.send([]);
         return;
     }
     const article_post_ids = result.map(article => article.payload.post_id);
@@ -294,6 +298,14 @@ const vectorize_article = async (article_id) => {
     const result = await vectorize_one(article);
     return result;
 }
+
+const VECTORIZE_LOCK_SECONDS = parseInt(process.env.VECTORIZE_LOCK_SECONDS || "900", 10);
+const vectorize_guard = createVectorizeGuard({
+    redis,
+    run: vectorize_article,
+    keyPrefix: `${KEY_PREFIX}-vectorize-lock`,
+    ttlSeconds: VECTORIZE_LOCK_SECONDS,
+});
 
 app.post("/vectorize", async (req, res) => {
     const { post_id, revengine_id } = req.body;

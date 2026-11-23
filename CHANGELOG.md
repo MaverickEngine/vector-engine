@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.4] - 2026-11-23
+
+### Fixed
+- POST `/similar` no longer vectorizes an unindexed article on every request. Each article is now vectorized at most once per `VECTORIZE_LOCK_SECONDS` (default 900), across pods via a Redis key, and in the background. Morning traffic on new articles had been queueing thousands of duplicate embeddings in Ollama, starving its other clients.
+- POST `/similar` no longer sends two responses when the Qdrant lookup throws, and returns after the 400 for a missing ID
+
 ## [1.6.3] - 2026-10-12
 
 ### Changed

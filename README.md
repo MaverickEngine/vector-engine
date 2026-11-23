@@ -53,6 +53,7 @@ The article vectorization process is as follows:
 - `MAX_SEARCH_WORDS` - Maximum words allowed in a `/search` query, defaults to `100`
 - `MAX_SEARCH_CHARS` - Maximum characters allowed in a `/search` query, defaults to `800`
 - `RATE_LIMIT_MAX` - Max requests per IP within the rate-limit window, defaults to `30`
+- `VECTORIZE_LOCK_SECONDS` - How long POST `/similar` waits before vectorizing the same unindexed article again, defaults to `900`
 - `RATE_LIMIT_TIME_WINDOW` - Rate-limit window, defaults to `1 minute`
 
 5. Start the server with `npm start`
