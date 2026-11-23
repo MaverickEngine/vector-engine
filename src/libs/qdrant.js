@@ -49,7 +49,31 @@ export class Qdrant {
             body: JSON.stringify(config)
         });
         await response.json();
+        await this.createPayloadIndexes(collection);
         return true;
+    }
+
+    // Every /similar and /search filters on these. Without them Qdrant reads each
+    // candidate's payload from disk, and grouped searches time out.
+    async createPayloadIndexes(collection) {
+        const fields = {
+            post_id: "integer",
+            status: "keyword",
+            date_published: "datetime",
+            sections: "text",
+            tags: "text",
+            author: "text",
+        };
+        for (const [field_name, field_schema] of Object.entries(fields)) {
+            const response = await fetch(`${this.url}/collections/${collection}/index?wait=true`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ field_name, field_schema })
+            });
+            await response.json();
+        }
     }
 
     async deleteCollection(collection) {
